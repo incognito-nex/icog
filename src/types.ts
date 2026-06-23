@@ -99,6 +99,7 @@ export interface UserSettings {
     autoPush: boolean;
     commitMessage: string;
     lastSyncedAt: string | null;
+    accessToken?: string;
   };
   appearance: {
     themeId: string;

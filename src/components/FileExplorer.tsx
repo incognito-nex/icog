@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   FolderPlus, FilePlus, ChevronRight, ChevronDown, Folder, FolderOpen, FileCode, Play,
   MoreVertical, Edit, Trash2, Copy, CornerDownRight, Star, Heart, FileText, 
-  ArrowRight, Lock, Code2, AlertTriangle, X, FileJson, FileTerminal, FileKey
+  ArrowRight, Lock, Code2, AlertTriangle, X, FileJson, FileTerminal, FileKey, Layers
 } from 'lucide-react';
 import { FileNode, AppTheme } from '../types';
 
@@ -221,7 +221,7 @@ export default function FileExplorer({
               background: isActive ? `${theme.accent}12` : 'transparent',
               color: isActive ? theme.textMain : theme.textMuted,
             }}
-            className={`group py-1.5 px-3 flex items-center justify-between text-xs cursor-pointer hover:bg-zinc-800/10 rounded-md transition duration-150 relative ${
+            className={`group py-1 px-2 flex items-center justify-between text-xs cursor-pointer hover:bg-zinc-800/10 rounded-md transition duration-150 relative ${
               isActive ? 'border-l-2' : ''
             }`}
           >
@@ -340,7 +340,7 @@ export default function FileExplorer({
       </div>
 
       {/* Workspace files list */}
-      <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5 max-h-[calc(100vh-140px)]">
+      <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
         {files.filter(f => f.parentId === null).length === 0 ? (
           <div className="p-4 text-center text-zinc-650 text-xs font-mono">
             Empty workspace. Use file icons above.
@@ -510,23 +510,49 @@ export default function FileExplorer({
               )}
 
               {activeModal === 'move' && (
-                <div className="space-y-2">
+                <div className="space-y-2 text-left">
                   <label className="text-[9px] font-mono font-bold tracking-widest uppercase block" style={{ color: theme.accent }}>Folder Destination:</label>
-                  <select
-                    value={modalParentId || ''}
-                    onChange={(e) => setModalParentId(e.target.value)}
-                    className="w-full py-2 px-3 border rounded-xl font-mono text-xs focus:outline-none focus:border-zinc-500"
-                    style={{
-                      backgroundColor: theme.isLight ? '#f4f4f5' : '#07080a',
-                      color: theme.textMain,
-                      borderColor: theme.borderColor
+                  <div 
+                    className="border rounded-xl max-h-40 overflow-y-auto divide-y font-mono text-xs select-none"
+                    style={{ 
+                      borderColor: theme.borderColor,
+                      backgroundColor: theme.isLight ? '#f4f4f5' : '#07080a'
                     }}
                   >
-                    <option value="">[Workspace Root]</option>
-                    {files.filter(f => f.type === 'folder' && f.id !== modalNodeId).map((f) => (
-                      <option key={f.id} value={f.id}>{f.name}</option>
-                    ))}
-                  </select>
+                    {/* Workspace Root option */}
+                    <div
+                      onClick={() => setModalParentId('')}
+                      className="flex items-center space-x-2 p-2 px-3 cursor-pointer transition hover:bg-zinc-800/10"
+                      style={{
+                        backgroundColor: modalParentId === '' || modalParentId === null ? `${theme.accent}1c` : 'transparent',
+                        color: modalParentId === '' || modalParentId === null ? theme.textMain : theme.textMuted,
+                        borderLeft: modalParentId === '' || modalParentId === null ? `3px solid ${theme.accent}` : '3px solid transparent'
+                      }}
+                    >
+                      <Layers size={13} style={{ color: theme.accent }} className="shrink-0" />
+                      <span className="font-semibold">[Workspace Root]</span>
+                    </div>
+
+                    {/* All other folders */}
+                    {files.filter(f => f.type === 'folder' && f.id !== modalNodeId).map((folder) => {
+                      const isSelected = modalParentId === folder.id;
+                      return (
+                        <div
+                          key={folder.id}
+                          onClick={() => setModalParentId(folder.id)}
+                          className="flex items-center space-x-2 p-2 px-3 cursor-pointer transition hover:bg-zinc-800/10"
+                          style={{
+                            backgroundColor: isSelected ? `${theme.accent}1c` : 'transparent',
+                            color: isSelected ? theme.textMain : theme.textMuted,
+                            borderLeft: isSelected ? `3px solid ${theme.accent}` : '3px solid transparent'
+                          }}
+                        >
+                          <Folder size={13} style={{ color: '#d29a38' }} className="shrink-0" />
+                          <span>{folder.name}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 

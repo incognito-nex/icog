@@ -14,6 +14,7 @@ interface SettingsProps {
   onSetTheme: (themeId: string) => void;
   theme: AppTheme;
   initialTab?: 'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile' | 'experimental';
+  onTriggerGitSync?: () => void;
 }
 
 export default function SettingsView({
@@ -25,6 +26,7 @@ export default function SettingsView({
   onSetTheme,
   theme,
   initialTab,
+  onTriggerGitSync,
 }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile' | 'experimental'>((initialTab as any) || 'editor');
 
@@ -227,9 +229,19 @@ export default function SettingsView({
                   type="checkbox"
                   checked={settings.editor.minimap}
                   onChange={(e) => handleUpdate('editor', 'minimap', e.target.checked)}
-                  style={{ accentColor: theme.accent }}
-                  className="rounded w-4 h-4 shrink-0"
+                  className="sr-only"
                 />
+                <div 
+                  style={{
+                    borderColor: settings.editor.minimap ? theme.accent : theme.borderColor,
+                    backgroundColor: settings.editor.minimap ? theme.accent : 'transparent'
+                  }}
+                  className="w-4 h-4 rounded border flex items-center justify-center transition shrink-0"
+                >
+                  {settings.editor.minimap && (
+                    <Check size={10} strokeWidth={3} style={{ color: theme.isLight ? '#ffffff' : '#000000' }} />
+                  )}
+                </div>
                 <div>
                   <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Gutter Minimap Map</span>
                   <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Enable floating mini overview</span>
@@ -241,9 +253,19 @@ export default function SettingsView({
                   type="checkbox"
                   checked={settings.editor.autoSave}
                   onChange={(e) => handleUpdate('editor', 'autoSave', e.target.checked)}
-                  style={{ accentColor: theme.accent }}
-                  className="rounded w-4 h-4 shrink-0"
+                  className="sr-only"
                 />
+                <div 
+                  style={{
+                    borderColor: settings.editor.autoSave ? theme.accent : theme.borderColor,
+                    backgroundColor: settings.editor.autoSave ? theme.accent : 'transparent'
+                  }}
+                  className="w-4 h-4 rounded border flex items-center justify-center transition shrink-0"
+                >
+                  {settings.editor.autoSave && (
+                    <Check size={10} strokeWidth={3} style={{ color: theme.isLight ? '#ffffff' : '#000000' }} />
+                  )}
+                </div>
                 <div>
                   <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Synchronous Auto-Save</span>
                   <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Saves files instantly on type</span>
@@ -255,9 +277,19 @@ export default function SettingsView({
                   type="checkbox"
                   checked={settings.editor.lineNumbers === 'on'}
                   onChange={(e) => handleUpdate('editor', 'lineNumbers', e.target.checked ? 'on' : 'off')}
-                  style={{ accentColor: theme.accent }}
-                  className="rounded w-4 h-4 shrink-0"
+                  className="sr-only"
                 />
+                <div 
+                  style={{
+                    borderColor: settings.editor.lineNumbers === 'on' ? theme.accent : theme.borderColor,
+                    backgroundColor: settings.editor.lineNumbers === 'on' ? theme.accent : 'transparent'
+                  }}
+                  className="w-4 h-4 rounded border flex items-center justify-center transition shrink-0"
+                >
+                  {settings.editor.lineNumbers === 'on' && (
+                    <Check size={10} strokeWidth={3} style={{ color: theme.isLight ? '#ffffff' : '#000000' }} />
+                  )}
+                </div>
                 <div>
                   <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Show Line Numbers</span>
                   <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Render gutter indexes on left</span>
@@ -269,9 +301,19 @@ export default function SettingsView({
                   type="checkbox"
                   checked={settings.editor.smoothCaret}
                   onChange={(e) => handleUpdate('editor', 'smoothCaret', e.target.checked)}
-                  style={{ accentColor: theme.accent }}
-                  className="rounded w-4 h-4 shrink-0"
+                  className="sr-only"
                 />
+                <div 
+                  style={{
+                    borderColor: settings.editor.smoothCaret ? theme.accent : theme.borderColor,
+                    backgroundColor: settings.editor.smoothCaret ? theme.accent : 'transparent'
+                  }}
+                  className="w-4 h-4 rounded border flex items-center justify-center transition shrink-0"
+                >
+                  {settings.editor.smoothCaret && (
+                    <Check size={10} strokeWidth={3} style={{ color: theme.isLight ? '#ffffff' : '#000000' }} />
+                  )}
+                </div>
                 <div>
                   <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Smooth Caret Animation</span>
                   <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Animates typing caret fluidly</span>
@@ -283,9 +325,19 @@ export default function SettingsView({
                   type="checkbox"
                   checked={settings.editor.bracketAutocomplete}
                   onChange={(e) => handleUpdate('editor', 'bracketAutocomplete', e.target.checked)}
-                  style={{ accentColor: theme.accent }}
-                  className="rounded w-4 h-4 shrink-0"
+                  className="sr-only"
                 />
+                <div 
+                  style={{
+                    borderColor: settings.editor.bracketAutocomplete ? theme.accent : theme.borderColor,
+                    backgroundColor: settings.editor.bracketAutocomplete ? theme.accent : 'transparent'
+                  }}
+                  className="w-4 h-4 rounded border flex items-center justify-center transition shrink-0"
+                >
+                  {settings.editor.bracketAutocomplete && (
+                    <Check size={10} strokeWidth={3} style={{ color: theme.isLight ? '#ffffff' : '#000000' }} />
+                  )}
+                </div>
                 <div>
                   <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Bracket Autoclose</span>
                   <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Auto close parentheses, quotes & braces</span>
@@ -358,9 +410,19 @@ export default function SettingsView({
                   type="checkbox"
                   checked={settings.terminal.clearOnRun}
                   onChange={(e) => handleUpdate('terminal', 'clearOnRun', e.target.checked)}
-                  style={{ accentColor: theme.accent }}
-                  className="rounded w-4 h-4 shrink-0"
+                  className="sr-only"
                 />
+                <div 
+                  style={{
+                    borderColor: settings.terminal.clearOnRun ? theme.accent : theme.borderColor,
+                    backgroundColor: settings.terminal.clearOnRun ? theme.accent : 'transparent'
+                  }}
+                  className="w-4 h-4 rounded border flex items-center justify-center transition shrink-0"
+                >
+                  {settings.terminal.clearOnRun && (
+                    <Check size={10} strokeWidth={3} style={{ color: theme.isLight ? '#ffffff' : '#000000' }} />
+                  )}
+                </div>
                 <div>
                   <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Auto-Clear on Execution</span>
                   <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Wipes historical logs when a script executes</span>
@@ -372,9 +434,19 @@ export default function SettingsView({
                   type="checkbox"
                   checked={settings.terminal.showTimestamp}
                   onChange={(e) => handleUpdate('terminal', 'showTimestamp', e.target.checked)}
-                  style={{ accentColor: theme.accent }}
-                  className="rounded w-4 h-4 shrink-0"
+                  className="sr-only"
                 />
+                <div 
+                  style={{
+                    borderColor: settings.terminal.showTimestamp ? theme.accent : theme.borderColor,
+                    backgroundColor: settings.terminal.showTimestamp ? theme.accent : 'transparent'
+                  }}
+                  className="w-4 h-4 rounded border flex items-center justify-center transition shrink-0"
+                >
+                  {settings.terminal.showTimestamp && (
+                    <Check size={10} strokeWidth={3} style={{ color: theme.isLight ? '#ffffff' : '#000000' }} />
+                  )}
+                </div>
                 <div>
                   <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Enable Timestamp Prefixes</span>
                   <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Displays date & elapsed run times of logs</span>
@@ -386,9 +458,19 @@ export default function SettingsView({
                   type="checkbox"
                   checked={settings.terminal.bellSound}
                   onChange={(e) => handleUpdate('terminal', 'bellSound', e.target.checked)}
-                  style={{ accentColor: theme.accent }}
-                  className="rounded w-4 h-4 shrink-0"
+                  className="sr-only"
                 />
+                <div 
+                  style={{
+                    borderColor: settings.terminal.bellSound ? theme.accent : theme.borderColor,
+                    backgroundColor: settings.terminal.bellSound ? theme.accent : 'transparent'
+                  }}
+                  className="w-4 h-4 rounded border flex items-center justify-center transition shrink-0"
+                >
+                  {settings.terminal.bellSound && (
+                    <Check size={10} strokeWidth={3} style={{ color: theme.isLight ? '#ffffff' : '#000000' }} />
+                  )}
+                </div>
                 <div>
                   <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Audio Bell System</span>
                   <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Produces diagnostic beeps on execution errors</span>
@@ -404,14 +486,14 @@ export default function SettingsView({
             <div className="flex items-center space-x-2 border-b pb-3" style={{ borderColor: theme.borderColor }}>
               <Github size={15} style={{ color: theme.accent }} />
               <h3 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
-                GitHub Core Sync Simulation
+                GitHub Core Sync Configuration
               </h3>
             </div>
 
             <div className="bg-neutral-900/35 border border-zinc-900 rounded-xl p-4 flex items-start space-x-3">
               <Code size={16} className="text-zinc-500 shrink-0 mt-0.5" />
               <p className="text-[10px] text-zinc-400 font-mono leading-relaxed uppercase">
-                Active source branches can sync with simulated standard web endpoints. Enabling sync triggers direct terminal cache push lines whenever changes are saved.
+                Active source branches sync with standard GitHub web endpoints. Enabling sync triggers direct terminal cache push lines whenever changes are saved or manual sweep is fired.
               </p>
             </div>
 
@@ -451,20 +533,64 @@ export default function SettingsView({
                 </div>
               </div>
 
+              <div className="space-y-1.5 text-left">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>GitHub Personal Access Token (PAT)</label>
+                  <span className="text-[9px] font-bold font-mono uppercase px-2 py-0.5 rounded-full" style={{ 
+                    backgroundColor: settings.gitSync.accessToken ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    color: settings.gitSync.accessToken ? '#10b981' : '#ef4444'
+                  }}>
+                    {settings.gitSync.accessToken ? 'Authenticated via Token' : 'OAuth Pending'}
+                  </span>
+                </div>
+                <input
+                  type="password"
+                  value={settings.gitSync.accessToken || ''}
+                  onChange={(e) => handleUpdate('gitSync', 'accessToken', e.target.value)}
+                  className={`w-full border rounded-xl py-2 px-3 text-xs font-mono focus:outline-none ${inputBg}`}
+                  placeholder="ghp_************************************"
+                />
+              </div>
+
               <div className="pt-4 border-t" style={{ borderColor: theme.borderColor }}>
                 <label className="flex items-center space-x-3 cursor-pointer border p-3 rounded-xl" style={{ borderColor: theme.borderColor }}>
                   <input
                     type="checkbox"
                     checked={settings.gitSync.enabled}
                     onChange={(e) => handleUpdate('gitSync', 'enabled', e.target.checked)}
-                    style={{ accentColor: theme.accent }}
-                    className="rounded w-4 h-4 shrink-0"
+                    className="sr-only"
                   />
+                  <div 
+                    style={{
+                      borderColor: settings.gitSync.enabled ? theme.accent : theme.borderColor,
+                      backgroundColor: settings.gitSync.enabled ? theme.accent : 'transparent'
+                    }}
+                    className="w-4 h-4 rounded border flex items-center justify-center transition shrink-0"
+                  >
+                    {settings.gitSync.enabled && (
+                      <Check size={10} strokeWidth={3} style={{ color: theme.isLight ? '#ffffff' : '#000000' }} />
+                    )}
+                  </div>
                   <div>
                     <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Enable Auto Git Tracking</span>
                     <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Logs code sync checkpoints on Ctrl+S keystrokes</span>
                   </div>
                 </label>
+              </div>
+
+              <div className="pt-4 flex items-center justify-between border-t" style={{ borderColor: theme.borderColor }}>
+                <div className="text-left">
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Manual Synchronization Sweep</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Compile memory workspace and force sync commit-push references immediately</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={onTriggerGitSync}
+                  style={{ backgroundColor: `${theme.accent}1c`, color: theme.accent, borderColor: `${theme.accent}33` }}
+                  className="px-4 py-1.5 border rounded-xl font-mono text-[10px] font-bold uppercase tracking-wider hover:opacity-90 active:scale-95 transition cursor-pointer"
+                >
+                  Sync & Push Now
+                </button>
               </div>
             </div>
           </div>
@@ -729,9 +855,19 @@ export default function SettingsView({
                       return updated;
                     });
                   }}
-                  className="w-4 h-4 rounded"
-                  style={{ accentColor: theme.accent }}
+                  className="sr-only"
                 />
+                <div 
+                  style={{
+                    borderColor: !!settings.experimental?.terminalEnabled ? theme.accent : theme.borderColor,
+                    backgroundColor: !!settings.experimental?.terminalEnabled ? theme.accent : 'transparent'
+                  }}
+                  className="w-4 h-4 rounded border flex items-center justify-center transition shrink-0"
+                >
+                  {!!settings.experimental?.terminalEnabled && (
+                    <Check size={10} strokeWidth={3} style={{ color: theme.isLight ? '#ffffff' : '#000000' }} />
+                  )}
+                </div>
                 <div>
                   <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Enable Terminal Console</span>
                   <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Enables the compiler console & standard terminal input/output pane</span>

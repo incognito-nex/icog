@@ -113,6 +113,7 @@ export default function App() {
         autoPush: false,
         commitMessage: 'wip: update playground scripts',
         lastSyncedAt: null,
+        accessToken: '',
       },
       appearance: {
         themeId: 'grey-matte',
@@ -253,7 +254,7 @@ export default function App() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       size: 0,
-      content: type === 'file' ? `--!strict\n-- Luau compilation element: ${name}\nprint("${name} executed successfully.")\n` : undefined,
+      content: type === 'file' ? `--!strict\n-- Luau compilation element: ${name}\n` : undefined,
     };
 
     setFiles(prev => [...prev, newNode]);
@@ -392,10 +393,60 @@ export default function App() {
 
         if (executedLines === 0) {
           // generic fallback execution
-          addTerminalLine(`Evaluation completed successfully. Process exited with return code: 0`, 'success');
+          addTerminalLine(`Evaluation completed. Process exited with return code: 0`, 'success');
         }
       }
     }, 450);
+  };
+
+  // Inject script mock output logging
+  const handleInjectScript = (fileId: string) => {
+    const target = files.find(f => f.id === fileId);
+    if (!target) return;
+
+    addTerminalLine(`$ inject -session=incognito -file="${target.name}"`, 'input');
+    addTerminalLine(`Searching for active host client processes...`, 'info');
+    
+    setTimeout(() => {
+      addTerminalLine(`Found client process. Attaching dynamic injection hooks to standard address space...`, 'info');
+    }, 250);
+
+    setTimeout(() => {
+      addTerminalLine(`Injection completed. Incognito API hooks initialized successfully.`, 'success');
+    }, 550);
+  };
+
+  // High-fidelity real Git commit & push trace simulation
+  const handleGitPush = () => {
+    addTerminalLine(`$ git add .`, 'input');
+    addTerminalLine(`$ git commit -m "${settings.gitSync.commitMessage || 'wip: update playground scripts'}"`, 'input');
+    addTerminalLine(`[local main b03fd12] ${settings.gitSync.commitMessage || 'wip: update playground scripts'}`, 'info');
+    addTerminalLine(` 3 files changed, 48 insertions(+), 12 deletions(-)`, 'info');
+    addTerminalLine(`$ git push origin ${settings.gitSync.syncBranch || 'main'}`, 'input');
+    addTerminalLine(`Pushing to: ${settings.gitSync.repositoryUrl}...`, 'info');
+    
+    if (settings.gitSync.accessToken) {
+      const masked = settings.gitSync.accessToken.substring(0, 8) + '...';
+      addTerminalLine(`Authenticating with GitHub using Personal Access Token (${masked})...`, 'info');
+    } else {
+      addTerminalLine(`Warning: No Personal Access Token configured. Attempting fallback SSH key handshake...`, 'warning');
+    }
+
+    setTimeout(() => {
+      addTerminalLine(`Enumerating objects: 3, done.`, 'info');
+      addTerminalLine(`Counting objects: 100% (3/3), done.`, 'info');
+      addTerminalLine(`Delta compression using up to 8 threads`, 'info');
+      addTerminalLine(`Compressing objects: 100% (2/2), done.`, 'info');
+    }, 250);
+
+    setTimeout(() => {
+      const commitHash = Math.random().toString(16).substring(2, 10);
+      addTerminalLine(`Writing objects: 100% (3/3), 342 bytes | 342.00 KiB/s, done.`, 'info');
+      addTerminalLine(`Total 3 (delta 1), reused 0 (delta 0), pack-reused 0`, 'info');
+      addTerminalLine(`To ${settings.gitSync.repositoryUrl}`, 'success');
+      addTerminalLine(`   c0ffee18..${commitHash}  ${settings.gitSync.syncBranch || 'main'} -> ${settings.gitSync.syncBranch || 'main'}`, 'success');
+      addTerminalLine(`✔ Git synchronization complete! Remote is clean.`, 'success');
+    }, 650);
   };
 
   // Dispatch interactive terminal parameters and execute
@@ -670,6 +721,8 @@ export default function App() {
                       settings={settings}
                       onRunScript={handleRunScript}
                       onSaveFile={handleSaveFile}
+                      onInjectScript={handleInjectScript}
+                      onClearTerminal={() => setTerminalLines([])}
                     />
 
                     {/* Integrated dynamic height resizable Terminal Console panel */}
@@ -766,6 +819,7 @@ export default function App() {
                           onSetTheme={(tId) => setSettings(prev => ({ ...prev, appearance: { ...prev.appearance, themeId: tId } }))}
                           theme={currentTheme}
                           initialTab="appearance"
+                          onTriggerGitSync={handleGitPush}
                         />
                       </motion.div>
                     )}
@@ -788,6 +842,7 @@ export default function App() {
                           onSetTheme={(tId) => setSettings(prev => ({ ...prev, appearance: { ...prev.appearance, themeId: tId } }))}
                           theme={currentTheme}
                           initialTab="editor"
+                          onTriggerGitSync={handleGitPush}
                         />
                       </motion.div>
                     )}

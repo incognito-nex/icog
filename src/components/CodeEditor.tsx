@@ -19,6 +19,8 @@ interface CodeEditorProps {
   settings: UserSettings;
   onRunScript: (fileId: string) => void;
   onSaveFile: (fileId: string, text: string) => void;
+  onInjectScript?: (fileId: string) => void;
+  onClearTerminal?: () => void;
 }
 
 export default function CodeEditor({
@@ -33,6 +35,8 @@ export default function CodeEditor({
   settings,
   onRunScript,
   onSaveFile,
+  onInjectScript,
+  onClearTerminal,
 }: CodeEditorProps) {
   const monaco = useMonaco();
   const [editorVal, setEditorVal] = useState('');
@@ -543,15 +547,37 @@ export default function CodeEditor({
           )}
 
           {activeFileId && (
-            <button
-              onClick={() => onRunScript(activeFileId)}
-              style={{ backgroundColor: `${theme.accent}14`, color: theme.accent, borderColor: `${theme.accent}33` }}
-              className="p-1 px-3 border rounded text-[10px] font-mono font-bold flex items-center space-x-1 hover:opacity-90 active:scale-95 transition"
-              title="Launch Luau compiler core"
-            >
-              <Play size={10} className="fill-current" />
-              <span>Launch</span>
-            </button>
+            <div className="flex items-center space-x-1.5">
+              <button
+                onClick={() => onInjectScript?.(activeFileId)}
+                style={{ backgroundColor: `rgba(16, 185, 129, 0.08)`, color: '#10b981', borderColor: `rgba(16, 185, 129, 0.2)` }}
+                className="p-1.5 px-3 border rounded text-[10px] font-mono font-bold flex items-center space-x-1 hover:opacity-90 active:scale-95 transition"
+                title="Inject current script node"
+              >
+                <Sparkles size={11} style={{ color: '#10b981' }} />
+                <span>Inject</span>
+              </button>
+
+              <button
+                onClick={() => onRunScript(activeFileId)}
+                style={{ backgroundColor: `${theme.accent}14`, color: theme.accent, borderColor: `${theme.accent}33` }}
+                className="p-1.5 px-3 border rounded text-[10px] font-mono font-bold flex items-center space-x-1 hover:opacity-90 active:scale-95 transition"
+                title="Execute current script node"
+              >
+                <Play size={10} className="fill-current" />
+                <span>Execute</span>
+              </button>
+
+              <button
+                onClick={() => onClearTerminal?.()}
+                style={{ backgroundColor: `rgba(239, 68, 68, 0.08)`, color: '#ef4444', borderColor: `rgba(239, 68, 68, 0.2)` }}
+                className="p-1.5 px-3 border rounded text-[10px] font-mono font-bold flex items-center space-x-1 hover:opacity-90 active:scale-95 transition"
+                title="Clear terminal outputs"
+              >
+                <Terminal size={11} style={{ color: '#ef4444' }} />
+                <span>Clear</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
