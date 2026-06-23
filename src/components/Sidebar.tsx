@@ -215,7 +215,7 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
             <button
               type="submit"
               className="w-full py-2 rounded-xl text-[10px] font-mono font-black uppercase text-center tracking-widest transition duration-150 hover:opacity-90 cursor-pointer"
-              style={{ backgroundColor: theme.accent, color: '#ffffff' }}
+              style={{ backgroundColor: theme.accent, color: theme.isLight ? '#ffffff' : '#000000' }}
             >
               Update Credentials
             </button>

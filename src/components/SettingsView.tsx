@@ -516,8 +516,8 @@ export default function SettingsView({
                       <span className="text-xs font-bold font-mono uppercase" style={{ color: theme.textMain }}>{syn.name}</span>
                       {isActive && (
                         <span 
-                          className="text-[8px] px-1.5 py-0.5 rounded font-mono font-extrabold text-[#ffffff]"
-                          style={{ backgroundColor: theme.accent }}
+                          className="text-[8px] px-1.5 py-0.5 rounded font-mono font-extrabold"
+                          style={{ backgroundColor: theme.accent, color: theme.isLight ? '#ffffff' : '#000000' }}
                         >
                           ACTIVE
                         </span>
@@ -569,8 +569,8 @@ export default function SettingsView({
                         <span>{t.name}</span>
                         {isActive && (
                           <span 
-                            className="text-[8px] px-1.5 py-0.5 rounded font-mono font-extrabold tracking-widest text-[#ffffff]"
-                            style={{ backgroundColor: theme.accent }}
+                            className="text-[8px] px-1.5 py-0.5 rounded font-mono font-extrabold tracking-widest"
+                            style={{ backgroundColor: theme.accent, color: theme.isLight ? '#ffffff' : '#000000' }}
                           >
                             RUNNING
                           </span>

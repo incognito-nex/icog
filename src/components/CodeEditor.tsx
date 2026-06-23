@@ -147,17 +147,32 @@ export default function CodeEditor({
       },
     });
 
+    // Helper to adapt dark syntax colors on dark themes and light syntax colors on light themes
+    const adaptColor = (hex: string) => {
+      const clean = hex.replace('#', '');
+      if (!theme.isLight) {
+        if (clean === '18181b' || clean === '000000' || clean === '0f172a' || clean === '09090b' || clean === '050505') {
+          return 'e2e8f0';
+        }
+      } else {
+        if (clean === 'ffffff' || clean === 'fafafa' || clean === 'f4f4f5' || clean === 'f5f5f5') {
+          return '18181b';
+        }
+      }
+      return clean;
+    };
+
     // Register active compiler theme depending on active custom profiles config colors!
     monaco.editor.defineTheme('incognitoTheme', {
       base: theme.isLight ? 'vs' : 'vs-dark',
       inherit: true,
       rules: [
-        { token: 'keyword', foreground: activeSyntax.colors.keywords.replace('#', ''), fontStyle: 'bold' },
-        { token: 'custom-func', foreground: activeSyntax.colors.functions.replace('#', ''), fontStyle: 'italic' },
-        { token: 'string', foreground: activeSyntax.colors.strings.replace('#', '') },
-        { token: 'number', foreground: activeSyntax.colors.numbers.replace('#', '') },
-        { token: 'comment', foreground: activeSyntax.colors.comments.replace('#', ''), fontStyle: 'italic' },
-        { token: 'operator', foreground: activeSyntax.colors.operators.replace('#', '') },
+        { token: 'keyword', foreground: adaptColor(activeSyntax.colors.keywords), fontStyle: 'bold' },
+        { token: 'custom-func', foreground: adaptColor(activeSyntax.colors.functions), fontStyle: 'italic' },
+        { token: 'string', foreground: adaptColor(activeSyntax.colors.strings) },
+        { token: 'number', foreground: adaptColor(activeSyntax.colors.numbers) },
+        { token: 'comment', foreground: adaptColor(activeSyntax.colors.comments), fontStyle: 'italic' },
+        { token: 'operator', foreground: adaptColor(activeSyntax.colors.operators) },
         { token: 'identifier', foreground: theme.isLight ? '18181b' : 'e2e8f0' },
       ],
       colors: {
@@ -531,6 +546,7 @@ export default function CodeEditor({
               language="luau"
               value={editorVal}
               onChange={handleEditorChange}
+              theme="incognitoTheme"
               options={{
                 fontSize: settings.editor.fontSize,
                 fontFamily: settings.editor.fontFamily,

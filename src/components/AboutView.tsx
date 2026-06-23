@@ -109,7 +109,7 @@ export default function AboutView({ theme, settings, files }: AboutViewProps) {
               className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition uppercase cursor-pointer"
               style={{
                 backgroundColor: theme.accent,
-                color: '#ffffff'
+                color: theme.isLight ? '#ffffff' : '#000000'
               }}
             >
               {syncStatus === 'syncing' ? (

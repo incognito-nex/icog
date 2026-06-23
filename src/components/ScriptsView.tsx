@@ -79,8 +79,8 @@ export default function ScriptsView({
 
         <button
           onClick={handleCreateScript}
-          style={{ backgroundColor: theme.accent }}
-          className="flex items-center space-x-1.5 text-xs text-white font-mono px-3.5 py-2.5 rounded-xl font-bold shadow-xs hover:opacity-90 active:scale-98 transition cursor-pointer"
+          style={{ backgroundColor: theme.accent, color: theme.isLight ? '#ffffff' : '#000000' }}
+          className="flex items-center space-x-1.5 text-xs font-mono px-3.5 py-2.5 rounded-xl font-bold shadow-xs hover:opacity-90 active:scale-98 transition cursor-pointer"
         >
           <Plus size={14} />
           <span>New Luau File</span>

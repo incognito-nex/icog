@@ -57,6 +57,7 @@ export interface AppTheme {
   name: string;
   isLight: boolean;
   background: string;
+  bodyBg: string;
   editorBg: string;
   accent: string;
   accentGlow: string;

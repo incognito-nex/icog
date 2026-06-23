@@ -97,7 +97,7 @@ export default function App() {
         lastSyncedAt: null,
       },
       appearance: {
-        themeId: 'clean-minimal',
+        themeId: 'grey-matte',
         blurIntensity: 'none',
         animationsSpeed: 'normal',
       },
@@ -587,7 +587,7 @@ export default function App() {
   return (
     <div
       style={{
-        backgroundColor: currentTheme.terminalBg,
+        backgroundColor: currentTheme.bodyBg,
         color: currentTheme.textMain,
       }}
       className={`h-screen w-screen flex flex-col font-sans select-none overflow-hidden text-left relative ${currentTheme.background}`}
