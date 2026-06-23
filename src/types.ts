@@ -1,0 +1,95 @@
+export interface FileNode {
+  id: string;
+  name: string;
+  type: 'file' | 'folder';
+  parentId: string | null;
+  content?: string;
+  language?: string;
+  isFavorite?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  size: number;
+}
+
+export interface TabItem {
+  fileId: string;
+  isPinned: boolean;
+  isUnsaved?: boolean;
+}
+
+export interface TerminalLine {
+  id: string;
+  type: 'info' | 'success' | 'warning' | 'error' | 'input';
+  text: string;
+  timestamp: string;
+}
+
+export interface UpdateItem {
+  id: string;
+  date: string; // e.g. "2026-06-23" or formatted
+  title: string;
+  description: string;
+  highlightedText?: string;
+  redCrossesText?: string;
+  greenPlusText?: string;
+  names: string[];
+}
+
+export interface CustomSyntaxProfile {
+  id: string;
+  name: string;
+  keywords: string[];
+  functions: string[];
+  colors: {
+    background: string;
+    keywords: string;
+    functions: string;
+    strings: string;
+    numbers: string;
+    comments: string;
+    operators: string;
+    accent: string;
+  };
+}
+
+export interface AppTheme {
+  id: string;
+  name: string;
+  isLight: boolean;
+  background: string;
+  editorBg: string;
+  accent: string;
+  accentGlow: string;
+  sidebarBg: string;
+  cardBg: string;
+  textMain: string;
+  textMuted: string;
+  borderColor: string;
+  terminalBg: string;
+  headerBg: string;
+}
+
+export interface UserSettings {
+  editor: {
+    fontSize: number;
+    fontFamily: string;
+    tabSize: number;
+    wordWrap: 'on' | 'off';
+    minimap: boolean;
+    autoSave: boolean;
+  };
+  appearance: {
+    themeId: string;
+    blurIntensity: 'none' | 'low' | 'medium' | 'high';
+    animationsSpeed: 'slow' | 'normal' | 'fast';
+  };
+  syntax: {
+    engineId: 'official' | string; // official or custom syntax ID
+  };
+  account: {
+    username: string;
+    avatarUrl: string;
+    bio: string;
+    badge: string;
+  };
+}
