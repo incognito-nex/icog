@@ -247,6 +247,80 @@ export default function Dashboard({
 
       </div>
 
+      {/* System Site Updates Feed */}
+      <div className="relative z-10 pt-8 border-t space-y-4" style={{ borderColor: theme.borderColor }}>
+        <div className="flex items-center space-x-2">
+          <Layers size={15} style={{ color: theme.accent }} />
+          <h2 className="text-xs font-bold uppercase tracking-wider font-mono text-left" style={{ color: theme.textMain }}>
+            Workspace Updates & Changelog
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[
+            {
+              id: 'u-1',
+              title: 'Inco-3 Layout Alignment',
+              date: 'June 23, 2026',
+              description: 'Calibrated screen geometry to perfectly match viewport limits, ensuring no scroll overflow or page clipping. Renamed workspace indicators to Inco-3.',
+              badge: 'Visual Engine',
+              names: ['System UX']
+            },
+            {
+              id: 'u-2',
+              title: 'Luau Monaco Autocomplete',
+              date: 'June 23, 2026',
+              description: 'Introduced completion lists for critical Luau system calls: task.wait, Vector3.new, Instance.new, and TweenService declarations.',
+              badge: 'IntelliSense',
+              names: ['Compiler team']
+            },
+            {
+              id: 'u-3',
+              title: 'Skin Tuning & Options expansion',
+              date: 'June 22, 2026',
+              description: 'Enhanced settings panel to toggle autocomplete preferences, buffer limitations, simulated CPU latency, and contrast presets.',
+              badge: 'Settings Core',
+              names: ['Global Admin']
+            }
+          ].map((item) => (
+            <div 
+              key={item.id}
+              className="p-4 rounded-xl border flex flex-col justify-between text-left space-y-3"
+              style={{ 
+                backgroundColor: theme.cardBg, 
+                borderColor: theme.borderColor 
+              }}
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md" style={{ backgroundColor: `${theme.accent}14`, color: theme.accent }}>
+                    {item.badge}
+                  </span>
+                  <span className="text-[9px] font-mono whitespace-nowrap" style={{ color: theme.textMuted }}>
+                    {item.date}
+                  </span>
+                </div>
+                <h3 className="text-xs font-bold font-mono tracking-tight" style={{ color: theme.textMain }}>
+                  {item.title}
+                </h3>
+                <p className="text-[11px] leading-relaxed font-sans" style={{ color: theme.textMuted }}>
+                  {item.description}
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-1.5 pt-2 border-t" style={{ borderColor: theme.borderColor }}>
+                <span className="text-[8px] font-mono uppercase tracking-widest" style={{ color: theme.textMuted }}>Active logs by:</span>
+                {item.names.map((name, idx) => (
+                  <span key={idx} className="text-[8px] font-mono px-1 py-0.5 bg-zinc-500/10 rounded" style={{ color: theme.textMain }}>
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
     </div>
   );
 }

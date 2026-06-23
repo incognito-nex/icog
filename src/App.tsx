@@ -741,6 +741,7 @@ export default function App() {
                           themes={themes}
                           onSetTheme={(tId) => setSettings(prev => ({ ...prev, appearance: { ...prev.appearance, themeId: tId } }))}
                           theme={currentTheme}
+                          initialTab="appearance"
                         />
                       </motion.div>
                     )}
@@ -762,6 +763,7 @@ export default function App() {
                           themes={themes}
                           onSetTheme={(tId) => setSettings(prev => ({ ...prev, appearance: { ...prev.appearance, themeId: tId } }))}
                           theme={currentTheme}
+                          initialTab="editor"
                         />
                       </motion.div>
                     )}

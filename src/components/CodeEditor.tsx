@@ -66,8 +66,10 @@ export default function CodeEditor({
   useEffect(() => {
     if (!monaco) return;
 
-    // Register Luau as custom ID
-    monaco.languages.register({ id: 'luau' });
+    // Register Luau as custom ID if not already registered
+    if (!monaco.languages.getLanguages().some(lang => lang.id === 'luau')) {
+      monaco.languages.register({ id: 'luau' });
+    }
 
     // Build lists
     const keywordsList = activeSyntax.keywords.length > 0 ? activeSyntax.keywords : ['local', 'function', 'return', 'end'];
@@ -170,6 +172,82 @@ export default function CodeEditor({
     });
 
     monaco.editor.setTheme('incognitoTheme');
+
+    // Register dynamic autocomplete completion provider
+    const completionProvider = monaco.languages.registerCompletionItemProvider('luau', {
+      provideCompletionItems: (model, position) => {
+        const word = model.getWordUntilPosition(position);
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn
+        };
+
+        const keywordsSuggestions = keywordsList.map(kw => ({
+          label: kw,
+          kind: monaco.languages.CompletionItemKind.Keyword,
+          insertText: kw,
+          range: range
+        }));
+
+        const functionsSuggestions = functionsList.map(fn => ({
+          label: fn,
+          kind: monaco.languages.CompletionItemKind.Function,
+          insertText: `${fn}($1)`,
+          insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+          range: range
+        }));
+
+        const luauGlobals = [
+          { name: 'task', desc: 'Schedules tasks', kind: 'Module' },
+          { name: 'task.wait', desc: 'Yields the current thread for the specified duration', kind: 'Method', snippet: 'task.wait($1)' },
+          { name: 'task.delay', desc: 'Schedules a function to run after a specified delay', kind: 'Method', snippet: 'task.delay(${1:delay}, function()\n\t$2\nend)' },
+          { name: 'task.spawn', desc: 'Spawns a thread immediately', kind: 'Method', snippet: 'task.spawn(function()\n\t$1\nend)' },
+          { name: 'game', desc: 'The DataModel root service container', kind: 'Variable' },
+          { name: 'workspace', desc: 'Quick reference to game.Workspace', kind: 'Variable' },
+          { name: 'Instance', desc: 'Constructor helper for creating Object instances', kind: 'Module' },
+          { name: 'Instance.new', desc: 'Creates a new object instance', kind: 'Method', snippet: 'Instance.new("${1:Part}", ${2:workspace})' },
+          { name: 'Vector3', desc: 'Constructor helper for 3D coordinates', kind: 'Module' },
+          { name: 'Vector3.new', desc: 'Creates a new Vector3 coordinate', kind: 'Method', snippet: 'Vector3.new(${1:0}, ${2:0}, ${3:0})' },
+          { name: 'math.clamp', desc: 'Clamps a number between a min and max', kind: 'Method', snippet: 'math.clamp(${1:val}, ${2:min}, ${3:max})' },
+          { name: 'math.random', desc: 'Returns a random number or integer', kind: 'Method', snippet: 'math.random(${1:1}, ${2:100})' },
+          { name: 'TweenService', desc: 'Service to animate property offsets smoothly', kind: 'Module' },
+          { name: 'Players', desc: 'Roblox / Luau Players server/client container', kind: 'Module' },
+          { name: 'ReplicatedStorage', desc: 'Synchronized workspace assets container', kind: 'Module' },
+          { name: 'Script', desc: 'Reference to this active script instance', kind: 'Variable' },
+          { name: 'print', desc: 'Log standard message debug lines to developer output', kind: 'Function', snippet: 'print($1)' },
+          { name: 'warn', desc: 'Log colored warning lines to diagnostic output', kind: 'Function', snippet: 'warn($1)' },
+          { name: 'error', desc: 'Raise fatal exception and discontinue sequence execution', kind: 'Function', snippet: 'error($1)' },
+          { name: 'pairs', desc: 'Generator function for standard iterative loops', kind: 'Function', snippet: 'pairs($1)' },
+          { name: 'ipairs', desc: 'Generator function for indexed sequential arrays', kind: 'Function', snippet: 'ipairs($1)' },
+          { name: 'type', desc: 'Identifies string type names of parameters', kind: 'Function', snippet: 'type($1)' },
+          { name: 'typeof', desc: 'Identifies complex structure type names in Luau environment', kind: 'Function', snippet: 'typeof($1)' },
+        ];
+
+        const rbxSuggestions = luauGlobals.map(g => {
+          let kind = monaco.languages.CompletionItemKind.Variable;
+          if (g.kind === 'Method' || g.kind === 'Function') kind = monaco.languages.CompletionItemKind.Method;
+          if (g.kind === 'Module') kind = monaco.languages.CompletionItemKind.Module;
+          return {
+            label: g.name,
+            kind: kind,
+            documentation: g.desc,
+            insertText: g.snippet || g.name,
+            insertTextRules: g.snippet ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : undefined,
+            range: range
+          };
+        });
+
+        return {
+          suggestions: [...keywordsSuggestions, ...functionsSuggestions, ...rbxSuggestions]
+        };
+      }
+    });
+
+    return () => {
+      completionProvider.dispose();
+    };
 
   }, [monaco, activeSyntax, theme]);
 

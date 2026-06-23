@@ -13,6 +13,7 @@ interface SettingsProps {
   themes: AppTheme[];
   onSetTheme: (themeId: string) => void;
   theme: AppTheme;
+  initialTab?: 'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile';
 }
 
 export default function SettingsView({
@@ -23,8 +24,9 @@ export default function SettingsView({
   themes,
   onSetTheme,
   theme,
+  initialTab,
 }: SettingsProps) {
-  const [activeTab, setActiveTab] = useState<'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile'>(initialTab || 'editor');
 
   const handleUpdate = <T extends keyof UserSettings>(section: T, field: keyof UserSettings[T], value: any) => {
     setSettings((prev) => {
@@ -271,6 +273,20 @@ export default function SettingsView({
                   <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Animates typing caret fluidly</span>
                 </div>
               </label>
+
+              <label className="flex items-center space-x-3 cursor-pointer border p-3 rounded-xl" style={{ borderColor: theme.borderColor }}>
+                <input
+                  type="checkbox"
+                  checked={settings.editor.bracketAutocomplete}
+                  onChange={(e) => handleUpdate('editor', 'bracketAutocomplete', e.target.checked)}
+                  style={{ accentColor: theme.accent }}
+                  className="rounded w-4 h-4 shrink-0"
+                />
+                <div>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Bracket Autoclose</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Auto close parentheses, quotes & braces</span>
+                </div>
+              </label>
             </div>
           </div>
         )}
@@ -358,6 +374,20 @@ export default function SettingsView({
                 <div>
                   <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Enable Timestamp Prefixes</span>
                   <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Displays date & elapsed run times of logs</span>
+                </div>
+              </label>
+
+              <label className="flex items-center space-x-3 cursor-pointer border p-3 rounded-xl" style={{ borderColor: theme.borderColor }}>
+                <input
+                  type="checkbox"
+                  checked={settings.terminal.bellSound}
+                  onChange={(e) => handleUpdate('terminal', 'bellSound', e.target.checked)}
+                  style={{ accentColor: theme.accent }}
+                  className="rounded w-4 h-4 shrink-0"
+                />
+                <div>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Audio Bell System</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Produces diagnostic beeps on execution errors</span>
                 </div>
               </label>
             </div>
