@@ -52,13 +52,7 @@ export default function ScriptsView({
   };
 
   const handleCreateScript = () => {
-    const name = prompt('Enter your script name (e.g., RagdollDismount.luau):');
-    if (!name) return;
-    
-    // add ext if missing
-    const finalName = name.endsWith('.luau') ? name : `${name}.luau`;
-    const defaultText = `--!strict\n-- Auto-constructed script file: ${finalName}\nprint("Booting active workspace diagnostics...")\n`;
-    onCreateNewFile(finalName, 'file', defaultText);
+    setActiveSection('editor');
   };
 
   // Filter & Sort

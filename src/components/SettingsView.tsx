@@ -27,13 +27,16 @@ export default function SettingsView({
   const [activeTab, setActiveTab] = useState<'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile'>('editor');
 
   const handleUpdate = <T extends keyof UserSettings>(section: T, field: keyof UserSettings[T], value: any) => {
-    setSettings((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value
-      }
-    }));
+    setSettings((prev) => {
+      const sectionObj = prev[section] || {};
+      return {
+        ...prev,
+        [section]: {
+          ...sectionObj,
+          [field]: value
+        }
+      };
+    });
   };
 
   const handleExportSyntax = () => {

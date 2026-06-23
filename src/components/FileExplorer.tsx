@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  FolderPlus, FilePlus, ChevronRight, ChevronDown, Folder, FileCode, Play,
+  FolderPlus, FilePlus, ChevronRight, ChevronDown, Folder, FolderOpen, FileCode, Play,
   MoreVertical, Edit, Trash2, Copy, CornerDownRight, Star, Heart, FileText, 
-  ArrowRight, Lock, Code2, AlertTriangle, X
+  ArrowRight, Lock, Code2, AlertTriangle, X, FileJson, FileTerminal, FileKey
 } from 'lucide-react';
 import { FileNode, AppTheme } from '../types';
 
@@ -60,21 +60,27 @@ export default function FileExplorer({
   const getFileIcon = (fileName: string) => {
     const lower = fileName.toLowerCase();
     if (lower.endsWith('.lua') || lower.endsWith('.luau')) {
-      return <FileCode size={13} style={{ color: '#38bdf8' }} className="shrink-0 animate-pulse" />;
+      // VS Code style blue Lua/Luau file icon
+      return <FileCode size={14} style={{ color: '#519aba' }} className="shrink-0" />;
     }
     if (lower.endsWith('.txt')) {
-      return <FileText size={13} style={{ color: '#94a3b8' }} className="shrink-0" />;
+      // VS Code dark gray document file icon
+      return <FileText size={14} style={{ color: '#90a4ae' }} className="shrink-0" />;
     }
     if (lower.endsWith('.py')) {
-      return <Code2 size={13} style={{ color: '#f59e0b' }} className="shrink-0" />;
+      // VS Code yellow/blue Python icon
+      return <FileTerminal size={14} style={{ color: '#3572a5' }} className="shrink-0" />;
     }
     if (lower.endsWith('.json')) {
-      return <Code2 size={13} style={{ color: '#ec4899' }} className="shrink-0" />;
+      // VS Code yellow JSON brackets icon
+      return <FileJson size={14} style={{ color: '#cbcb41' }} className="shrink-0" />;
     }
     if (lower.includes('.env')) {
-      return <Lock size={13} style={{ color: '#10b981' }} className="shrink-0" />;
+      // VS Code key-lock env icon
+      return <FileKey size={14} style={{ color: '#e6b450' }} className="shrink-0" />;
     }
-    return <FileCode size={13} style={{ color: theme.accent }} className="shrink-0" />;
+    // Generic script file icon
+    return <FileCode size={14} style={{ color: '#858585' }} className="shrink-0" />;
   };
 
   const handleContextMenu = (e: React.MouseEvent, nodeId: string, nodeType: 'file' | 'folder') => {
@@ -229,7 +235,11 @@ export default function FileExplorer({
               )}
 
               {isFolder ? (
-                <Folder size={14} className="text-zinc-400 shrink-0" />
+                isExpanded ? (
+                  <FolderOpen size={14} style={{ color: '#d29a38' }} className="shrink-0" />
+                ) : (
+                  <Folder size={14} style={{ color: '#d29a38' }} className="shrink-0" />
+                )
               ) : (
                 getFileIcon(node.name)
               )}
@@ -368,7 +378,7 @@ export default function FileExplorer({
             className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
           >
             <Edit size={12} />
-            <span>Rename Node</span>
+            <span>Rename</span>
           </button>
           
           <button
@@ -376,7 +386,7 @@ export default function FileExplorer({
             className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
           >
             <Copy size={12} />
-            <span>Duplicate Node</span>
+            <span>Duplicate</span>
           </button>
 
           <button
@@ -384,7 +394,7 @@ export default function FileExplorer({
             className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
           >
             <CornerDownRight size={12} />
-            <span>Move Path...</span>
+            <span>Move Item</span>
           </button>
 
           {contextMenu.nodeType === 'file' && (
@@ -404,7 +414,7 @@ export default function FileExplorer({
             className="px-3.5 py-1.5 text-left text-rose-500 hover:bg-rose-500/10 transition flex items-center space-x-2 font-semibold cursor-pointer"
           >
             <Trash2 size={12} />
-            <span>Purge Node</span>
+            <span>Delete</span>
           </button>
         </div>
       )}
@@ -452,11 +462,11 @@ export default function FileExplorer({
           >
             <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: theme.borderColor }}>
               <span className="text-xs font-bold font-mono uppercase tracking-widest text-zinc-300" style={{ color: theme.textMain }}>
-                {activeModal === 'create_file' && 'Assemble Script File'}
-                {activeModal === 'create_folder' && 'Deploy Folder Node'}
-                {activeModal === 'rename' && 'Rename Node Buffer'}
-                {activeModal === 'delete' && 'Purge Data Segment'}
-                {activeModal === 'move' && 'Re-Link Tree Path'}
+                {activeModal === 'create_file' && 'Create New File'}
+                {activeModal === 'create_folder' && 'Create New Folder'}
+                {activeModal === 'rename' && 'Rename'}
+                {activeModal === 'delete' && 'Delete Item'}
+                {activeModal === 'move' && 'Move Item'}
               </span>
               <button 
                 onClick={() => setActiveModal(null)} 
@@ -471,7 +481,7 @@ export default function FileExplorer({
               {/* Conditional parameters based on modal actions */}
               {(activeModal === 'create_file' || activeModal === 'create_folder' || activeModal === 'rename') && (
                 <div className="space-y-1">
-                  <label className="text-[9px] font-mono font-bold tracking-widest text-[#ee3c22] uppercase">Name Identity :</label>
+                  <label className="text-[9px] font-mono font-bold tracking-widest text-[#ee3c22] uppercase">Name:</label>
                   <input
                     autoFocus
                     type="text"
@@ -494,14 +504,14 @@ export default function FileExplorer({
                 <div className="flex items-start space-x-3 text-xs leading-relaxed">
                   <AlertTriangle className="text-rose-500 shrink-0 mt-0.5" size={16} />
                   <p className="text-zinc-300" style={{ color: theme.textMain }}>
-                    Are you absolutely sure you want to permanently purge this database node file index? This operation is irreversible.
+                    Are you absolutely sure you want to permanently delete this item? This operation cannot be undone.
                   </p>
                 </div>
               )}
 
               {activeModal === 'move' && (
                 <div className="space-y-2">
-                  <label className="text-[9px] font-mono font-bold tracking-widest text-[#ee3c22] uppercase block">Select Dest Folder :</label>
+                  <label className="text-[9px] font-mono font-bold tracking-widest text-[#ee3c22] uppercase block">Folder Destination:</label>
                   <select
                     value={modalParentId || ''}
                     onChange={(e) => setModalParentId(e.target.value)}
@@ -537,7 +547,11 @@ export default function FileExplorer({
                   className="px-4 py-1.5 text-[10px] font-mono font-bold rounded-lg text-[#ffffff] uppercase transition hover:opacity-90 cursor-pointer"
                   style={{ backgroundColor: activeModal === 'delete' ? '#ef4444' : theme.accent }}
                 >
-                  {activeModal === 'delete' ? 'Purge Now' : 'Assign'}
+                  {activeModal === 'delete' && 'Delete'}
+                  {activeModal === 'create_file' && 'Create'}
+                  {activeModal === 'create_folder' && 'Create'}
+                  {activeModal === 'rename' && 'Rename'}
+                  {activeModal === 'move' && 'Move'}
                 </button>
               </div>
 

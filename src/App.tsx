@@ -63,20 +63,18 @@ export default function App() {
   });
 
   const [settings, setSettings] = useState<UserSettings>(() => {
-    const saved = localStorage.getItem('incognito_settings');
-    if (saved) {
-      return JSON.parse(saved);
-    }
     const onboardedName = localStorage.getItem('user_onboarded_name') || 'New Developer';
-    return {
+    const blackAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='black'/></svg>";
+    
+    const defaults = {
       editor: {
         fontSize: 12,
         fontFamily: 'JetBrains Mono',
         tabSize: 4,
-        wordWrap: 'on',
+        wordWrap: 'on' as const,
         minimap: false,
         autoSave: true,
-        lineNumbers: 'on',
+        lineNumbers: 'on' as const,
         cursorBlinking: 'smooth',
         cursorStyle: 'line',
         smoothCaret: true,
@@ -108,11 +106,40 @@ export default function App() {
       },
       account: {
         username: onboardedName,
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        avatarUrl: blackAvatar,
         bio: 'Development environment active.',
         badge: 'Lead Architect',
       },
     };
+
+    const saved = localStorage.getItem('incognito_settings');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Overwrite porsche/unsplash/default avatar with clean black
+        let loadedAvatar = parsed.account?.avatarUrl || blackAvatar;
+        if (loadedAvatar.includes('unsplash.com') || loadedAvatar.includes('porsche') || loadedAvatar.includes('photo-')) {
+          loadedAvatar = blackAvatar;
+        }
+
+        return {
+          editor: { ...defaults.editor, ...parsed.editor },
+          terminal: { ...defaults.terminal, ...parsed.terminal },
+          gitSync: { ...defaults.gitSync, ...parsed.gitSync },
+          appearance: { ...defaults.appearance, ...parsed.appearance },
+          syntax: { ...defaults.syntax, ...parsed.syntax },
+          account: { 
+            ...defaults.account, 
+            ...parsed.account,
+            username: parsed.account?.username || defaults.account.username,
+            avatarUrl: loadedAvatar
+          },
+        };
+      } catch (err) {
+        return defaults;
+      }
+    }
+    return defaults;
   });
 
   // Active Theme object computed
@@ -489,32 +516,27 @@ export default function App() {
 
   if (!userOnboarded) {
     return (
-      <div className="min-h-screen w-screen flex items-center justify-center bg-[#07080a] text-zinc-100 font-sans px-4 overflow-hidden relative">
-        {/* Ambient background glow dots */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#ee3c22]/10 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-zinc-800/10 blur-[120px] pointer-events-none" />
-
+      <div className="min-h-screen w-screen flex items-center justify-center bg-white text-zinc-900 font-sans px-4 overflow-hidden relative">
         <motion.div 
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="w-full max-w-md bg-[#0d0e12] border border-zinc-900 rounded-3xl p-8 relative z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="w-full max-w-sm bg-white border border-zinc-200 rounded-2xl p-8 relative z-10 shadow-xs"
         >
           <div className="space-y-6 text-left">
-            {/* Minimalist branding indicator */}
             <div className="flex items-center space-x-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#ee3c22] animate-pulse" />
-              <span className="text-[10px] font-bold font-mono tracking-widest text-[#ee3c22] uppercase">
+              <div className="w-2.5 h-2.5 rounded-full bg-black" />
+              <span className="text-[10px] font-bold font-mono tracking-widest text-zinc-800 uppercase">
                 Incognito 3 - Introduction
               </span>
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-xl font-extrabold tracking-tight text-white uppercase font-mono">
-                Initialize Persona
+              <h1 className="text-lg font-bold tracking-tight text-zinc-900 font-mono">
+                What's your name?
               </h1>
-              <p className="text-xs text-zinc-400 font-mono tracking-wide leading-relaxed uppercase">
-                WELCOME ARCHITECT. ENTER AN IDENTITY ID CODE TO ACTIVATE THE CLOUD WORKSPACE PROTOCOLS.
+              <p className="text-xs text-zinc-400 font-mono">
+                Enter your name to begin layout personalization.
               </p>
             </div>
 
@@ -544,16 +566,16 @@ export default function App() {
                   onChange={(e) => setOnboardValue(e.target.value)}
                   placeholder="Write your desired name here..."
                   maxLength={24}
-                  className="w-full bg-[#07080a] border border-zinc-850 rounded-xl py-3 px-4 text-xs font-mono text-zinc-100 placeholder-zinc-650 focus:outline-none focus:border-[#ee3c22] transition"
+                  className="w-full bg-white border border-zinc-300 rounded-xl py-2.5 px-4 text-xs font-mono text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-black transition"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={!onboardValue.trim()}
-                className="w-full bg-[#ee3c22] hover:bg-[#ff4e35] disabled:bg-zinc-800 disabled:text-zinc-650 text-white rounded-xl py-3 text-xs font-bold font-mono tracking-widest uppercase transition duration-200 cursor-pointer"
+                className="w-full bg-black hover:bg-zinc-800 disabled:bg-zinc-100 disabled:text-zinc-400 text-white rounded-xl py-2.5 text-xs font-bold font-mono tracking-widest uppercase transition duration-150 cursor-pointer"
               >
-                Log into Systems
+                Continue
               </button>
             </form>
           </div>
@@ -568,7 +590,7 @@ export default function App() {
         backgroundColor: currentTheme.terminalBg,
         color: currentTheme.textMain,
       }}
-      className={`min-h-screen flex flex-col font-sans select-none overflow-hidden text-left relative ${currentTheme.background}`}
+      className={`h-screen w-screen flex flex-col font-sans select-none overflow-hidden text-left relative ${currentTheme.background}`}
     >
       <AnimatePresence>
         {showLoading && (

@@ -144,12 +144,7 @@ export default function Dashboard({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button
-              onClick={() => {
-                const name = prompt('Create a new script file (e.g., test.luau):');
-                if (name && name.trim()) {
-                  onCreateNewFile(name.trim(), 'file', '-- New script\n\nprint("Hello World!")\n');
-                }
-              }}
+              onClick={() => setActiveSection('editor')}
               className="p-4 rounded-xl border text-left transition duration-200 hover:-translate-y-0.5 active:translate-y-0 text-xs font-semibold flex flex-col justify-between group"
               style={{ 
                 backgroundColor: theme.cardBg, 
