@@ -150,11 +150,12 @@ export default function FileExplorer({
             onContextMenu={(e) => handleContextMenu(e, node.id, node.type)}
             style={{
               paddingLeft: `${Math.max(8, depth * 12)}px`,
-              borderColor: isActive ? theme.borderColor : 'transparent',
+              borderColor: isActive ? theme.accent : 'transparent',
               background: isActive ? `${theme.accent}12` : 'transparent',
+              color: isActive ? theme.textMain : theme.textMuted,
             }}
-            className={`group py-1.5 px-3 flex items-center justify-between text-xs cursor-pointer hover:bg-zinc-800/20 active:bg-zinc-850/40 rounded-md transition duration-150 relative ${
-              isActive ? 'text-white border-l' : 'text-zinc-400'
+            className={`group py-1.5 px-3 flex items-center justify-between text-xs cursor-pointer hover:bg-zinc-800/10 rounded-md transition duration-150 relative ${
+              isActive ? 'border-l-2' : ''
             }`}
           >
             <div className="flex items-center space-x-2 truncate">

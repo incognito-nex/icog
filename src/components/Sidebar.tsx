@@ -12,9 +12,8 @@ interface SidebarProps {
 export default function Sidebar({ activeSection, setActiveSection, theme, settings }: SidebarProps) {
   const menuItems = [
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
-    { id: 'editor', label: 'Luau Editor', icon: <Code size={18} /> },
+    { id: 'editor', label: 'Editor', icon: <Code size={18} /> },
     { id: 'scripts', label: 'Scripts', icon: <FileCode size={18} /> },
-    { id: 'themes', label: 'Themes', icon: <Palette size={18} /> },
     { id: 'settings', label: 'Settings', icon: <Sliders size={18} /> },
     { id: 'about', label: 'Workspace Info', icon: <Info size={18} /> },
   ];
@@ -46,7 +45,7 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
           
           {/* Brand Word - understated */}
           <span className="hidden sm:inline text-xs font-bold font-mono tracking-widest text-zinc-100">
-            INCOGNITO <span className="opacity-60">III</span>
+            PLAYGROUND
           </span>
         </div>
       </div>
@@ -112,8 +111,7 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
             style={{ color: theme.accent }}
             className="text-[8px] font-mono font-bold tracking-widest uppercase flex items-center space-x-0.5"
           >
-            <Cpu size={8} className="mr-0.5 shrink-0" />
-            <span>{settings.account.badge}</span>
+            <span>Developer</span>
           </span>
         </div>
       </div>

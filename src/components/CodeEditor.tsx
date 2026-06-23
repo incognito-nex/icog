@@ -422,8 +422,9 @@ export default function CodeEditor({
           {activeFileId && !settings.editor.autoSave && (
             <button
               onClick={triggerManualSave}
-              className="p-1.5 rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-500 hover:text-[#ee3c22] transition"
-              title="Save active physical logs (Ctrl+S)"
+              className="p-1.5 rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-500 transition"
+              style={{ color: theme.textMuted }}
+              title="Save active file (Ctrl+S)"
             >
               <Save size={13} />
             </button>
@@ -473,30 +474,37 @@ export default function CodeEditor({
 
             {/* Float Save alert */}
             {tabs.find(t => t.fileId === activeFileId)?.isUnsaved && (
-              <div className="absolute bottom-4 right-4 bg-[#ee3c22]/10 border border-[#ee3c22]/40 backdrop-blur-md px-3 py-1.5 rounded-lg flex items-center space-x-2 text-[#ee3c22] font-mono text-[10px]">
-                <AlertCircle size={12} className="animate-bounce" />
-                <span>Unsaved workspace logs. Click launch or Ctrl+S to cache.</span>
+              <div 
+                className="absolute bottom-4 right-4 border backdrop-blur-md px-3 py-1.5 rounded-lg flex items-center space-x-2 font-mono text-[10px]"
+                style={{ 
+                  backgroundColor: `${theme.accent}14`, 
+                  borderColor: `${theme.accent}40`,
+                  color: theme.accent
+                }}
+              >
+                <AlertCircle size={12} className="shrink-0" />
+                <span>Unsaved changes. Ctrl+S to save code state.</span>
               </div>
             )}
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center select-none bg-zinc-950/60 relative">
-            <div className="absolute inset-0 bg-radial-[circle_400px_at_50%_50%,rgba(238,60,34,0.03),transparent]" />
+            <div className="absolute inset-0 bg-radial-[circle_400px_at_50%_50%,rgba(0,0,0,0.03),transparent]" />
 
             <div className="space-y-4 max-w-sm relative z-10 font-sans">
-              <FileCode size={38} className="text-zinc-800 mx-auto animate-pulse" />
+              <FileCode size={32} className="text-zinc-800 mx-auto animate-pulse" />
               <div>
                 <h3 className="text-xs font-bold font-mono text-zinc-400 uppercase tracking-widest">
-                  Empty Sandbox Stage
+                  No Active File
                 </h3>
-                <p className="text-[11px] text-zinc-600 mt-2 font-mono leading-relaxed uppercase">
-                  Select or trigger a new Luau file node from the physical workspace directory to calibrate.
+                <p className="text-[11px] text-zinc-650 mt-2 font-mono leading-relaxed uppercase">
+                  Select key scripts from the explorer on the left to start coding.
                 </p>
               </div>
 
               <div className="border border-zinc-900 bg-zinc-950 p-3 rounded-lg text-left text-[10px] font-mono text-zinc-500 leading-relaxed max-w-xs mx-auto">
                 <div className="text-zinc-400 font-bold border-b border-zinc-900 pb-1 mb-1.5 uppercase">Shortcuts Cheat-Sheet:</div>
-                <div className="flex justify-between py-0.5"><span>Ctrl + P</span> <span className="text-[#ee3c22]">Search Command Palette</span></div>
+                <div className="flex justify-between py-0.5"><span>Ctrl + P</span> <span style={{ color: theme.accent }}>Command Palette</span></div>
                 <div className="flex justify-between py-0.5"><span>Ctrl + S</span> <span>Save Workspace logs</span></div>
                 <div className="flex justify-between py-0.5"><span>Escape</span> <span>Exit floating consoles</span></div>
               </div>

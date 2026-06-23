@@ -26,6 +26,12 @@ import AboutView from './components/AboutView';
 export default function App() {
   const [showLoading, setShowLoading] = useState(true);
   
+  // Name onboarding
+  const [userOnboarded, setUserOnboarded] = useState(() => {
+    return !!localStorage.getItem('user_onboarded_name');
+  });
+  const [onboardValue, setOnboardValue] = useState('');
+  
   // Navigation
   const [activeSection, setActiveSection] = useState<string>('home');
 
@@ -41,13 +47,13 @@ export default function App() {
   const [tabs, setTabs] = useState<TabItem[]>(() => {
     const saved = localStorage.getItem('incognito_tabs');
     return saved ? JSON.parse(saved) : [
-      { fileId: 'porsche-chassis', isPinned: true }
+      { fileId: 'chassis-physics', isPinned: true }
     ];
   });
 
   const [activeFileId, setActiveFileId] = useState<string | null>(() => {
     const saved = localStorage.getItem('incognito_active_file');
-    return saved ? saved : 'porsche-chassis';
+    return saved ? saved : 'chassis-physics';
   });
 
   const [themes, setThemes] = useState<AppTheme[]>(defaultThemes);
@@ -61,28 +67,29 @@ export default function App() {
     if (saved) {
       return JSON.parse(saved);
     }
+    const onboardedName = localStorage.getItem('user_onboarded_name') || 'New Developer';
     return {
       editor: {
         fontSize: 12,
         fontFamily: 'JetBrains Mono',
         tabSize: 4,
         wordWrap: 'on',
-        minimap: true,
+        minimap: false,
         autoSave: true,
       },
       appearance: {
-        themeId: 'porsche-slate',
-        blurIntensity: 'medium',
+        themeId: 'clean-minimal',
+        blurIntensity: 'none',
         animationsSpeed: 'normal',
       },
       syntax: {
         engineId: 'studio-classic',
       },
       account: {
-        username: 'FerryP_GT3',
-        avatarUrl: 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?w=150&auto=format&fit=crop&q=80',
-        bio: 'Double Wishbone chassis calibrator & Luau core optimizer.',
-        badge: 'Lead Calibrator',
+        username: onboardedName,
+        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+        bio: 'Development environment active.',
+        badge: 'Developer',
       },
     };
   });
@@ -95,13 +102,13 @@ export default function App() {
     {
       id: 'init-1',
       type: 'info',
-      text: 'Incognito standard virtual compilation console initialized',
+      text: 'Workspace environment core successfully loaded.',
       timestamp: new Date().toLocaleTimeString(),
     },
     {
       id: 'init-2',
       type: 'success',
-      text: 'Ready. Dual-Wishbone Active aligning diagnostics listening on PORT 3000',
+      text: 'Compiler Ready. Sandboxed workspace listening on default port 3000.',
       timestamp: new Date().toLocaleTimeString(),
     },
   ]);
@@ -458,6 +465,72 @@ export default function App() {
       }
     }))
   ];
+
+  if (!userOnboarded) {
+    return (
+      <div className="min-h-screen w-screen flex items-center justify-center bg-[#fafafa] text-[#18181b] font-sans px-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm bg-white border border-[#e4e4e7] rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.03)]"
+        >
+          <div className="space-y-6 text-center">
+            {/* Minimalist branding indicator */}
+            <div className="flex items-center justify-center space-x-2">
+              <div className="w-2 h-2 rounded-full bg-[#18181b]" />
+              <span className="text-[10px] font-bold font-mono tracking-widest text-[#18181b] uppercase">STUDIO PLAYGROUND</span>
+            </div>
+
+            <div className="space-y-2">
+              <h1 className="text-xl font-extrabold tracking-tight text-[#18181b]">
+                What's your name?
+              </h1>
+              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
+                Please enter your name to personalize the space.
+              </p>
+            </div>
+
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const trimmed = onboardValue.trim();
+                if (trimmed) {
+                  localStorage.setItem('user_onboarded_name', trimmed);
+                  setSettings(prev => ({
+                    ...prev,
+                    account: {
+                      ...prev.account,
+                      username: trimmed
+                    }
+                  }));
+                  setUserOnboarded(true);
+                }
+              }}
+              className="space-y-4"
+            >
+              <input
+                autoFocus
+                type="text"
+                value={onboardValue}
+                onChange={(e) => setOnboardValue(e.target.value)}
+                placeholder="Developer name..."
+                maxLength={24}
+                className="w-full bg-[#fafafa] border border-[#e4e4e7] rounded-xl py-3 px-4 text-xs font-semibold text-[#18181b] placeholder-zinc-400 focus:outline-none focus:border-[#18181b] transition"
+              />
+
+              <button
+                type="submit"
+                disabled={!onboardValue.trim()}
+                className="w-full bg-[#18181b] hover:bg-[#27272a] disabled:bg-[#18181b]/30 text-white rounded-xl py-3 text-xs font-bold tracking-tight transition duration-200"
+              >
+                Continue
+              </button>
+            </form>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div
