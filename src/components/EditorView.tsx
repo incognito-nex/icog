@@ -231,7 +231,7 @@ export default function EditorView({
                 <span className="text-zinc-600 shrink-0">
                   {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                 </span>
-                <Folder size={14} className="text-[#ee3c22] shrink-0" />
+                <Folder size={14} style={{ color: theme.accent }} className="shrink-0" />
                 <span className="text-xs font-mono truncate">{node.name}</span>
               </div>
 
@@ -265,12 +265,13 @@ export default function EditorView({
             onClick={() => onSelectFile(node.id)}
             className={`group flex items-center py-1 px-2.5 rounded cursor-pointer transition font-mono ${
               isSelected 
-                ? 'bg-[#ee3c22]/10 text-white font-semibold border-l-2' 
+                ? 'text-white font-semibold border-l-2' 
                 : 'hover:bg-zinc-800/40 text-zinc-400 hover:text-zinc-200'
             }`}
             style={{ 
               paddingLeft: `${depth * 10 + 26}px`,
-              borderLeftColor: isSelected ? theme.accent : 'transparent'
+              borderLeftColor: isSelected ? theme.accent : 'transparent',
+              backgroundColor: isSelected ? `${theme.accent}14` : 'transparent'
             }}
           >
             <div className="flex items-center space-x-2 truncate text-left flex-1">
@@ -303,7 +304,7 @@ export default function EditorView({
         className="h-9 border-b flex items-center justify-between px-3 text-[10px] font-mono text-zinc-500 z-10 shrink-0 select-none"
       >
         <div className="flex items-center space-x-1">
-          <span className="uppercase text-[#ee3c22] font-extrabold tracking-widest mr-1.5">IDE CORE</span>
+          <span className="uppercase font-extrabold tracking-widest mr-1.5 text-xs font-mono" style={{ color: theme.accent }}>IDE CORE</span>
           <span>workspaces</span>
           <span>/</span>
           {activeNode ? (
@@ -317,9 +318,10 @@ export default function EditorView({
           {activeFileId && (
             <button
               onClick={() => onRunScript(activeFileId)}
-              className="flex items-center space-x-1 px-2.5 py-1 text-[9px] font-bold rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-350 hover:text-white transition uppercase font-semibold text-[#ee3c22]/90"
+              style={{ color: theme.accent, borderColor: theme.borderColor }}
+              className="flex items-center space-x-1 px-2.5 py-1 text-[9px] font-bold rounded bg-zinc-900 hover:border-zinc-700 hover:text-white transition uppercase font-semibold"
             >
-              <Play size={10} className="fill-current text-[#ee3c22]" />
+              <Play size={10} className="fill-current" style={{ color: theme.accent }} />
               <span>Run File</span>
             </button>
           )}
@@ -378,7 +380,7 @@ export default function EditorView({
           {/* Explorer Resizer Handle */}
           <div
             onMouseDown={handleExplorerDragStart}
-            className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-[#ee3c22]/50 transition-colors z-20"
+            className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-zinc-600/40 transition-colors z-20"
           />
         </div>
 
@@ -420,7 +422,7 @@ export default function EditorView({
                   >
                     <div className="flex items-center space-x-2 mr-2">
                       {tab.isPinned && (
-                        <Pin size={10} className="text-[#ee3c22] rotate-45 shrink-0" />
+                        <Pin size={10} style={{ color: theme.accent }} className="rotate-45 shrink-0" />
                       )}
                       
                       <FileCode size={11} className="text-zinc-500 shrink-0" />
@@ -511,7 +513,8 @@ export default function EditorView({
                 <div className="mt-4 flex flex-wrap gap-2 justify-center">
                   <button 
                     onClick={() => triggerCreateIn(null, 'file')}
-                    className="p-1 px-3 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800/80 rounded font-mono text-[9px] uppercase tracking-widest text-[#ee3c22] font-semibold"
+                    style={{ color: theme.accent }}
+                    className="p-1 px-3 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800/80 rounded font-mono text-[9px] uppercase tracking-widest font-semibold"
                   >
                     + Create Nodule
                   </button>

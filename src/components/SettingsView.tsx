@@ -13,7 +13,7 @@ interface SettingsProps {
   themes: AppTheme[];
   onSetTheme: (themeId: string) => void;
   theme: AppTheme;
-  initialTab?: 'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile';
+  initialTab?: 'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile' | 'experimental';
 }
 
 export default function SettingsView({
@@ -26,7 +26,7 @@ export default function SettingsView({
   theme,
   initialTab,
 }: SettingsProps) {
-  const [activeTab, setActiveTab] = useState<'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile'>(initialTab || 'editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile' | 'experimental'>((initialTab as any) || 'editor');
 
   const handleUpdate = <T extends keyof UserSettings>(section: T, field: keyof UserSettings[T], value: any) => {
     setSettings((prev) => {
@@ -95,19 +95,23 @@ export default function SettingsView({
 
       {/* Tabs */}
       <div className="flex border-b overflow-x-auto shrink-0 select-none no-scrollbar" style={{ borderColor: theme.borderColor }}>
-        {(['editor', 'terminal', 'gitsync', 'luau', 'appearance', 'profile'] as const).map((tab) => {
+        {(settings.experimental?.terminalEnabled 
+          ? ['editor', 'terminal', 'gitsync', 'luau', 'appearance', 'profile', 'experimental'] 
+          : ['editor', 'gitsync', 'luau', 'appearance', 'profile', 'experimental']
+        ).map((tab) => {
           const tabLabels: Record<string, string> = {
             editor: 'Editor Dev',
             terminal: 'Terminal Settings',
             gitsync: 'Git Sync',
             luau: 'Luau Engines',
             appearance: 'Skin/Themes',
-            profile: 'Profile'
+            profile: 'Profile',
+            experimental: 'Experimental'
           };
           return (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => setActiveTab(tab as any)}
               style={{
                 borderColor: activeTab === tab ? theme.accent : 'transparent',
                 color: activeTab === tab ? theme.textMain : theme.textMuted
@@ -686,6 +690,53 @@ export default function SettingsView({
                   className={`w-full border rounded-xl py-2 px-3 text-xs font-mono focus:outline-none ${inputBg}`}
                 />
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'experimental' && (
+          <div className="space-y-6">
+            <div className="flex items-center space-x-2 border-b pb-3" style={{ borderColor: theme.borderColor }}>
+              <Sparkles size={15} style={{ color: theme.accent }} />
+              <h3 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
+                Experimental Sandbox Features
+              </h3>
+            </div>
+
+            <p className="text-xs text-zinc-400 font-mono leading-relaxed">
+              These are developer features that can be toggled safely. Toggling these features will update active view structures in real-time.
+            </p>
+
+            <div className="grid grid-cols-1 gap-4 pt-2">
+              <label className="flex items-center space-x-3 cursor-pointer border p-4 rounded-xl transition duration-150" 
+                     style={{ 
+                       borderColor: settings.experimental?.terminalEnabled ? theme.accent : theme.borderColor,
+                       backgroundColor: settings.experimental?.terminalEnabled ? `${theme.accent}0d` : 'transparent'
+                     }}>
+                <input
+                  type="checkbox"
+                  checked={!!settings.experimental?.terminalEnabled}
+                  onChange={(e) => {
+                    setSettings((prev) => {
+                      const updated = {
+                        ...prev,
+                        experimental: {
+                          ...prev.experimental,
+                          terminalEnabled: e.target.checked
+                        }
+                      };
+                      localStorage.setItem('incognito_settings', JSON.stringify(updated));
+                      return updated;
+                    });
+                  }}
+                  className="w-4 h-4 rounded"
+                  style={{ accentColor: theme.accent }}
+                />
+                <div>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Enable Terminal Console</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Enables the compiler console & standard terminal input/output pane</span>
+                </div>
+              </label>
             </div>
           </div>
         )}

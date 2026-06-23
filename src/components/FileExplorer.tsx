@@ -375,7 +375,7 @@ export default function FileExplorer({
         >
           <button
             onClick={(e) => triggerRename(contextMenu.nodeId, files.find(f => f.id === contextMenu.nodeId)?.name || '', e)}
-            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-zinc-800/40 hover:text-white transition flex items-center space-x-2 cursor-pointer"
           >
             <Edit size={12} />
             <span>Rename</span>
@@ -383,7 +383,7 @@ export default function FileExplorer({
           
           <button
             onClick={(e) => triggerDuplicate(contextMenu.nodeId, e)}
-            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-zinc-800/40 hover:text-white transition flex items-center space-x-2 cursor-pointer"
           >
             <Copy size={12} />
             <span>Duplicate</span>
@@ -391,7 +391,7 @@ export default function FileExplorer({
 
           <button
             onClick={(e) => triggerMove(contextMenu.nodeId, e)}
-            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-zinc-800/40 hover:text-white transition flex items-center space-x-2 cursor-pointer"
           >
             <CornerDownRight size={12} />
             <span>Move Item</span>
@@ -400,7 +400,7 @@ export default function FileExplorer({
           {contextMenu.nodeType === 'file' && (
             <button
               onClick={(e) => triggerToggleFav(contextMenu.nodeId, e)}
-              className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
+              className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-zinc-800/40 hover:text-white transition flex items-center space-x-2 cursor-pointer"
             >
               <Star size={12} />
               <span>Toggle Favorite</span>
@@ -433,7 +433,7 @@ export default function FileExplorer({
         >
           <button
             onClick={(e) => handleCreateInFolder('file', null, e)}
-            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-zinc-800/40 hover:text-white transition flex items-center space-x-2 cursor-pointer"
           >
             <FilePlus size={12} />
             <span>Create New File</span>
@@ -441,7 +441,7 @@ export default function FileExplorer({
 
           <button
             onClick={(e) => handleCreateInFolder('folder', null, e)}
-            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-zinc-800/40 hover:text-white transition flex items-center space-x-2 cursor-pointer"
           >
             <FolderPlus size={12} />
             <span>Create New Folder</span>
@@ -481,7 +481,7 @@ export default function FileExplorer({
               {/* Conditional parameters based on modal actions */}
               {(activeModal === 'create_file' || activeModal === 'create_folder' || activeModal === 'rename') && (
                 <div className="space-y-1">
-                  <label className="text-[9px] font-mono font-bold tracking-widest text-[#ee3c22] uppercase">Name:</label>
+                  <label className="text-[9px] font-mono font-bold tracking-widest uppercase block" style={{ color: theme.accent }}>Name:</label>
                   <input
                     autoFocus
                     type="text"
@@ -490,7 +490,7 @@ export default function FileExplorer({
                       setModalInputValue(e.target.value);
                       setModalError(null);
                     }}
-                    className="w-full py-2 px-3 border rounded-xl font-mono text-xs focus:outline-none focus:border-[#ee3c22]"
+                    className="w-full py-2 px-3 border rounded-xl font-mono text-xs focus:outline-none focus:border-zinc-500"
                     style={{
                       backgroundColor: theme.isLight ? '#f4f4f5' : '#07080a',
                       color: theme.textMain,
@@ -511,11 +511,11 @@ export default function FileExplorer({
 
               {activeModal === 'move' && (
                 <div className="space-y-2">
-                  <label className="text-[9px] font-mono font-bold tracking-widest text-[#ee3c22] uppercase block">Folder Destination:</label>
+                  <label className="text-[9px] font-mono font-bold tracking-widest uppercase block" style={{ color: theme.accent }}>Folder Destination:</label>
                   <select
                     value={modalParentId || ''}
                     onChange={(e) => setModalParentId(e.target.value)}
-                    className="w-full py-2 px-3 border rounded-xl font-mono text-xs focus:outline-none focus:border-[#ee3c22]"
+                    className="w-full py-2 px-3 border rounded-xl font-mono text-xs focus:outline-none focus:border-zinc-500"
                     style={{
                       backgroundColor: theme.isLight ? '#f4f4f5' : '#07080a',
                       color: theme.textMain,
@@ -544,8 +544,11 @@ export default function FileExplorer({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 text-[10px] font-mono font-bold rounded-lg text-[#ffffff] uppercase transition hover:opacity-90 cursor-pointer"
-                  style={{ backgroundColor: activeModal === 'delete' ? '#ef4444' : theme.accent }}
+                  className="px-4 py-1.5 text-[10px] font-mono font-bold rounded-lg uppercase transition hover:opacity-90 cursor-pointer"
+                  style={{ 
+                    backgroundColor: activeModal === 'delete' ? '#ef4444' : theme.accent,
+                    color: activeModal === 'delete' ? '#ffffff' : (theme.isLight ? '#ffffff' : '#000000')
+                  }}
                 >
                   {activeModal === 'delete' && 'Delete'}
                   {activeModal === 'create_file' && 'Create'}

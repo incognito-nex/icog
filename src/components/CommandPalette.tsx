@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Hash, Terminal, Settings, Eye, Palette, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AppTheme } from '../types';
 
 interface PaletteItem {
   id: string;
@@ -15,9 +16,10 @@ interface CommandPaletteProps {
   isOpen: boolean;
   onClose: () => void;
   items: PaletteItem[];
+  theme: AppTheme;
 }
 
-export default function CommandPalette({ isOpen, onClose, items }: CommandPaletteProps) {
+export default function CommandPalette({ isOpen, onClose, items, theme }: CommandPaletteProps) {
   const [search, setSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -119,18 +121,30 @@ export default function CommandPalette({ isOpen, onClose, items }: CommandPalett
                       item.action();
                       onClose();
                     }}
-                    className={`w-full text-left flex items-center justify-between px-3.5 py-2.5 rounded-md transition-all ${
-                      isSelected
-                        ? 'bg-[#ee3c22]/10 border-l-2 border-[#ee3c22] text-[#ee3c22]'
-                        : 'hover:bg-zinc-800/40 text-zinc-300'
+                    style={{
+                      borderLeftColor: isSelected ? theme.accent : 'transparent',
+                      backgroundColor: isSelected ? `${theme.accent}14` : 'transparent',
+                      color: isSelected ? theme.accent : undefined
+                    }}
+                    className={`w-full text-left flex items-center justify-between px-3.5 py-2.5 rounded-md border-l-2 transition-all ${
+                      isSelected ? '' : 'hover:bg-zinc-800/40 text-zinc-300'
                     }`}
                   >
                     <div className="flex items-center space-x-3">
-                      <div className={`p-1.5 rounded-md ${isSelected ? 'bg-[#ee3c22]/20 text-[#ee3c22]' : 'bg-zinc-800/50 text-zinc-400'}`}>
+                      <div 
+                        style={{
+                          backgroundColor: isSelected ? `${theme.accent}25` : undefined,
+                          color: isSelected ? theme.accent : undefined
+                        }}
+                        className={`p-1.5 rounded-md ${isSelected ? '' : 'bg-zinc-800/50 text-zinc-400'}`}
+                      >
                         {item.icon}
                       </div>
                       <div>
-                        <div className={`text-xs font-semibold ${isSelected ? 'text-[#ee3c22]' : 'text-zinc-200'}`}>
+                        <div 
+                          style={{ color: isSelected ? theme.accent : undefined }}
+                          className={`text-xs font-semibold ${isSelected ? '' : 'text-zinc-200'}`}
+                        >
                           {item.name}
                         </div>
                         <span className="text-[9px] text-zinc-500 font-mono tracking-wider uppercase">
@@ -146,7 +160,7 @@ export default function CommandPalette({ isOpen, onClose, items }: CommandPalett
                         </kbd>
                       )}
                       {isSelected && (
-                        <Check className="w-3.5 h-3.5 text-[#ee3c22] animate-pulse" />
+                        <Check className="w-3.5 h-3.5 animate-pulse" style={{ color: theme.accent }} />
                       )}
                     </div>
                   </button>

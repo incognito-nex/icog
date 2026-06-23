@@ -70,7 +70,10 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
           </div>
           
           {/* Brand Word - understated */}
-          <span className="hidden sm:inline text-xs font-bold font-mono tracking-widest text-[#ee3c22]">
+          <span 
+            className="hidden sm:inline text-xs font-bold font-mono tracking-widest"
+            style={{ color: theme.accent }}
+          >
             INCO-3
           </span>
         </div>

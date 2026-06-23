@@ -48,6 +48,11 @@ export default function CodeEditor({
   // Full screen mode
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Custom rename tab GUI state
+  const [renameFileId, setRenameFileId] = useState<string | null>(null);
+  const [renameInputValue, setRenameInputValue] = useState('');
+  const [renameError, setRenameError] = useState<string | null>(null);
+
   // Retrieve current active code node
   const activeFile = files.find(f => f.id === activeFileId);
 
@@ -378,15 +383,29 @@ export default function CodeEditor({
     const orig = files.find(f => f.id === fId);
     if (!orig) return;
 
-    const newName = prompt('Rename tab file:', orig.name);
-    if (newName && newName.trim() && newName !== orig.name) {
-      setFiles(prev => prev.map(f => {
-        if (f.id === fId) {
-          return { ...f, name: newName.trim(), updatedAt: new Date().toISOString() };
-        }
-        return f;
-      }));
+    setRenameFileId(fId);
+    setRenameInputValue(orig.name);
+    setRenameError(null);
+  };
+
+  const submitTabRename = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = renameInputValue.trim();
+    if (!val) {
+      setRenameError('Filename cannot be empty');
+      return;
     }
+    if (val.includes('/') || val.includes('\\')) {
+      setRenameError('Invalid characters in file name');
+      return;
+    }
+    setFiles(prev => prev.map(f => {
+      if (f.id === renameFileId) {
+        return { ...f, name: val, updatedAt: new Date().toISOString() };
+      }
+      return f;
+    }));
+    setRenameFileId(null);
   };
 
   const handleRightClickTab = (e: React.MouseEvent, fId: string) => {
@@ -621,21 +640,21 @@ export default function CodeEditor({
         >
           <button
             onClick={() => handleRename(activeTabMenu.fileId)}
-            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2"
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-zinc-800/40 hover:text-white transition flex items-center space-x-2"
           >
             <span>Rename File Tab</span>
           </button>
 
           <button
             onClick={() => handleTogglePin(activeTabMenu.fileId)}
-            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2"
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-zinc-800/40 hover:text-white transition flex items-center space-x-2"
           >
             <span>Pin Standard Anchor</span>
           </button>
 
           <button
             onClick={() => handleDuplicate(activeTabMenu.fileId)}
-            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2"
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-zinc-800/40 hover:text-white transition flex items-center space-x-2"
           >
             <span>Duplicate File</span>
           </button>
@@ -644,7 +663,7 @@ export default function CodeEditor({
 
           <button
             onClick={() => handleCloseOthers(activeTabMenu.fileId)}
-            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2"
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-zinc-800/40 hover:text-white transition flex items-center space-x-2"
           >
             <span>Close Other Tabs</span>
           </button>
@@ -655,6 +674,84 @@ export default function CodeEditor({
           >
             <span>Close Active Tab</span>
           </button>
+        </div>
+      )}
+      {/* Custom Rename Tab GUI modal */}
+      {renameFileId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#000000]/70 select-none">
+          <div 
+            style={{ 
+              backgroundColor: theme.cardBg, 
+              borderColor: theme.borderColor,
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+            }} 
+            className="w-full max-w-sm rounded-2xl border p-6 font-sans mx-4"
+          >
+            <div className="flex items-center justify-between border-b pb-3 mb-4" style={{ borderColor: theme.borderColor }}>
+              <div className="flex items-center space-x-2">
+                <Sliders size={14} style={{ color: theme.accent }} />
+                <h4 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
+                  Rename Tab File
+                </h4>
+              </div>
+              <button 
+                onClick={() => setRenameFileId(null)}
+                className="p-1 rounded-md hover:bg-zinc-850 text-zinc-400 hover:text-zinc-200 transition animate-none"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <form onSubmit={submitTabRename} className="space-y-4">
+              <div className="space-y-1.5 text-left">
+                <label 
+                  className="text-[9px] font-mono font-bold tracking-widest uppercase block"
+                  style={{ color: theme.accent }}
+                >
+                  Filename:
+                </label>
+                <input
+                  type="text"
+                  value={renameInputValue}
+                  onChange={(e) => setRenameInputValue(e.target.value)}
+                  autoFocus
+                  style={{ 
+                    backgroundColor: theme.isLight ? 'rgb(244 244 245)' : 'rgb(9 9 11)', 
+                    borderColor: theme.borderColor,
+                    color: theme.textMain 
+                  }}
+                  className="w-full py-2.5 px-3 border rounded-xl font-mono text-xs focus:outline-none focus:ring-1 focus:ring-zinc-600"
+                />
+                {renameError && (
+                  <div className="text-[10px] text-red-500 font-mono flex items-center space-x-1 mt-1">
+                    <AlertTriangle size={10} />
+                    <span>{renameError}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end space-x-2 pt-2 border-t" style={{ borderColor: theme.borderColor }}>
+                <button
+                  type="button"
+                  onClick={() => setRenameFileId(null)}
+                  style={{ color: theme.textMuted }}
+                  className="px-3.5 py-1.5 text-[10px] font-mono font-bold hover:opacity-80 uppercase transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 text-[10px] font-mono font-bold rounded-lg uppercase transition hover:opacity-90 cursor-pointer"
+                  style={{ 
+                    backgroundColor: theme.accent, 
+                    color: theme.isLight ? '#ffffff' : '#000000' 
+                  }}
+                >
+                  Save Rename
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

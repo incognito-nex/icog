@@ -114,4 +114,7 @@ export interface UserSettings {
     bio: string;
     badge: string;
   };
+  experimental?: {
+    terminalEnabled: boolean;
+  };
 }

@@ -41,19 +41,37 @@ export default function App() {
   // States with Local Storage caching
   const [files, setFiles] = useState<FileNode[]>(() => {
     const saved = localStorage.getItem('incognito_files');
-    return saved ? JSON.parse(saved) : defaultFiles;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.some((f: any) => f.id === 'chassis-physics')) {
+        localStorage.removeItem('incognito_files');
+        localStorage.removeItem('incognito_tabs');
+        localStorage.removeItem('incognito_active_file');
+        return defaultFiles;
+      }
+      return parsed;
+    }
+    return defaultFiles;
   });
 
   const [tabs, setTabs] = useState<TabItem[]>(() => {
     const saved = localStorage.getItem('incognito_tabs');
-    return saved ? JSON.parse(saved) : [
-      { fileId: 'chassis-physics', isPinned: true }
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.some((t: any) => t.fileId === 'chassis-physics')) {
+        return [{ fileId: 'script-lua', isPinned: true }];
+      }
+      return parsed;
+    }
+    return [
+      { fileId: 'script-lua', isPinned: true }
     ];
   });
 
   const [activeFileId, setActiveFileId] = useState<string | null>(() => {
     const saved = localStorage.getItem('incognito_active_file');
-    return saved ? saved : 'chassis-physics';
+    if (saved === 'chassis-physics' || !saved) return 'script-lua';
+    return saved;
   });
 
   const [themes, setThemes] = useState<AppTheme[]>(defaultThemes);
@@ -110,6 +128,9 @@ export default function App() {
         bio: 'Development environment active.',
         badge: 'Lead Architect',
       },
+      experimental: {
+        terminalEnabled: false,
+      },
     };
 
     const saved = localStorage.getItem('incognito_settings');
@@ -134,6 +155,7 @@ export default function App() {
             username: parsed.account?.username || defaults.account.username,
             avatarUrl: loadedAvatar
           },
+          experimental: { ...defaults.experimental, ...parsed.experimental },
         };
       } catch (err) {
         return defaults;
@@ -651,14 +673,16 @@ export default function App() {
                     />
 
                     {/* Integrated dynamic height resizable Terminal Console panel */}
-                    <TerminalPanel
-                      lines={terminalLines}
-                      onSendCommand={handleSendTerminal}
-                      onClear={() => setTerminalLines([])}
-                      terminalHeight={terminalHeight}
-                      setTerminalHeight={setTerminalHeight}
-                      theme={currentTheme}
-                    />
+                    {settings.experimental?.terminalEnabled && (
+                      <TerminalPanel
+                        lines={terminalLines}
+                        onSendCommand={handleSendTerminal}
+                        onClear={() => setTerminalLines([])}
+                        terminalHeight={terminalHeight}
+                        setTerminalHeight={setTerminalHeight}
+                        theme={currentTheme}
+                      />
+                    )}
                   </div>
 
                 </div>
@@ -798,6 +822,7 @@ export default function App() {
             isOpen={isPaletteOpen}
             onClose={() => setIsPaletteOpen(false)}
             items={commandPaletteItems}
+            theme={currentTheme}
           />
 
         </div>
