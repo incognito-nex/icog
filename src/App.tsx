@@ -76,6 +76,27 @@ export default function App() {
         wordWrap: 'on',
         minimap: false,
         autoSave: true,
+        lineNumbers: 'on',
+        cursorBlinking: 'smooth',
+        cursorStyle: 'line',
+        smoothCaret: true,
+        bracketAutocomplete: true,
+      },
+      terminal: {
+        clearOnRun: true,
+        showTimestamp: true,
+        fontScale: 1.0,
+        simulatedLatency: 200,
+        bufferLimit: 100,
+        bellSound: false,
+      },
+      gitSync: {
+        enabled: true,
+        repositoryUrl: 'https://github.com/RobloxUser/IncognitoWorkspace',
+        syncBranch: 'main',
+        autoPush: false,
+        commitMessage: 'wip: update playground scripts',
+        lastSyncedAt: null,
       },
       appearance: {
         themeId: 'clean-minimal',
@@ -89,7 +110,7 @@ export default function App() {
         username: onboardedName,
         avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
         bio: 'Development environment active.',
-        badge: 'Developer',
+        badge: 'Lead Architect',
       },
     };
   });
@@ -468,25 +489,32 @@ export default function App() {
 
   if (!userOnboarded) {
     return (
-      <div className="min-h-screen w-screen flex items-center justify-center bg-[#fafafa] text-[#18181b] font-sans px-4">
+      <div className="min-h-screen w-screen flex items-center justify-center bg-[#07080a] text-zinc-100 font-sans px-4 overflow-hidden relative">
+        {/* Ambient background glow dots */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#ee3c22]/10 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-zinc-800/10 blur-[120px] pointer-events-none" />
+
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-sm bg-white border border-[#e4e4e7] rounded-3xl p-8 shadow-[0_8px_30px_rgba(0,0,0,0.03)]"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="w-full max-w-md bg-[#0d0e12] border border-zinc-900 rounded-3xl p-8 relative z-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
         >
-          <div className="space-y-6 text-center">
+          <div className="space-y-6 text-left">
             {/* Minimalist branding indicator */}
-            <div className="flex items-center justify-center space-x-2">
-              <div className="w-2 h-2 rounded-full bg-[#18181b]" />
-              <span className="text-[10px] font-bold font-mono tracking-widest text-[#18181b] uppercase">STUDIO PLAYGROUND</span>
+            <div className="flex items-center space-x-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#ee3c22] animate-pulse" />
+              <span className="text-[10px] font-bold font-mono tracking-widest text-[#ee3c22] uppercase">
+                Incognito 3 - Introduction
+              </span>
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-xl font-extrabold tracking-tight text-[#18181b]">
-                What's your name?
+              <h1 className="text-xl font-extrabold tracking-tight text-white uppercase font-mono">
+                Initialize Persona
               </h1>
-              <p className="text-xs text-zinc-500 font-medium leading-relaxed">
-                Please enter your name to personalize the space.
+              <p className="text-xs text-zinc-400 font-mono tracking-wide leading-relaxed uppercase">
+                WELCOME ARCHITECT. ENTER AN IDENTITY ID CODE TO ACTIVATE THE CLOUD WORKSPACE PROTOCOLS.
               </p>
             </div>
 
@@ -508,22 +536,24 @@ export default function App() {
               }}
               className="space-y-4"
             >
-              <input
-                autoFocus
-                type="text"
-                value={onboardValue}
-                onChange={(e) => setOnboardValue(e.target.value)}
-                placeholder="Developer name..."
-                maxLength={24}
-                className="w-full bg-[#fafafa] border border-[#e4e4e7] rounded-xl py-3 px-4 text-xs font-semibold text-[#18181b] placeholder-zinc-400 focus:outline-none focus:border-[#18181b] transition"
-              />
+              <div className="space-y-1">
+                <input
+                  autoFocus
+                  type="text"
+                  value={onboardValue}
+                  onChange={(e) => setOnboardValue(e.target.value)}
+                  placeholder="Write your desired name here..."
+                  maxLength={24}
+                  className="w-full bg-[#07080a] border border-zinc-850 rounded-xl py-3 px-4 text-xs font-mono text-zinc-100 placeholder-zinc-650 focus:outline-none focus:border-[#ee3c22] transition"
+                />
+              </div>
 
               <button
                 type="submit"
                 disabled={!onboardValue.trim()}
-                className="w-full bg-[#18181b] hover:bg-[#27272a] disabled:bg-[#18181b]/30 text-white rounded-xl py-3 text-xs font-bold tracking-tight transition duration-200"
+                className="w-full bg-[#ee3c22] hover:bg-[#ff4e35] disabled:bg-zinc-800 disabled:text-zinc-650 text-white rounded-xl py-3 text-xs font-bold font-mono tracking-widest uppercase transition duration-200 cursor-pointer"
               >
-                Continue
+                Log into Systems
               </button>
             </form>
           </div>
@@ -558,6 +588,7 @@ export default function App() {
               setActiveSection={setActiveSection}
               theme={currentTheme}
               settings={settings}
+              setSettings={setSettings}
             />
 
             {/* Inner view container */}
@@ -725,6 +756,7 @@ export default function App() {
                         <AboutView
                           theme={currentTheme}
                           settings={settings}
+                          files={files}
                         />
                       </motion.div>
                     )}

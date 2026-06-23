@@ -147,7 +147,7 @@ export default function CodeEditor({
 
     // Register active compiler theme depending on active custom profiles config colors!
     monaco.editor.defineTheme('incognitoTheme', {
-      base: 'vs-dark',
+      base: theme.isLight ? 'vs' : 'vs-dark',
       inherit: true,
       rules: [
         { token: 'keyword', foreground: activeSyntax.colors.keywords.replace('#', ''), fontStyle: 'bold' },
@@ -156,14 +156,14 @@ export default function CodeEditor({
         { token: 'number', foreground: activeSyntax.colors.numbers.replace('#', '') },
         { token: 'comment', foreground: activeSyntax.colors.comments.replace('#', ''), fontStyle: 'italic' },
         { token: 'operator', foreground: activeSyntax.colors.operators.replace('#', '') },
-        { token: 'identifier', foreground: 'e2e8f0' },
+        { token: 'identifier', foreground: theme.isLight ? '18181b' : 'e2e8f0' },
       ],
       colors: {
         'editor.background': theme.editorBg,
-        'editor.foreground': '#f1f5f9',
-        'editorLineNumber.foreground': '#52525b',
+        'editor.foreground': theme.isLight ? '#18181b' : '#f1f5f9',
+        'editorLineNumber.foreground': theme.isLight ? '#71717a' : '#52525b',
         'editorLineNumber.activeForeground': theme.accent,
-        'editor.lineHighlightBackground': '#1e222b40',
+        'editor.lineHighlightBackground': theme.isLight ? '#fafafa50' : '#1e222b40',
         'editor.selectionBackground': `${theme.accent}33`,
         'editorCursor.foreground': theme.accent,
       }

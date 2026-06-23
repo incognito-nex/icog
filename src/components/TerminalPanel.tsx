@@ -101,18 +101,21 @@ export default function TerminalPanel({
       {/* Resizer drag bar */}
       <div
         onMouseDown={handleResizeStart}
-        className="absolute top-0 inset-x-0 h-1.5 cursor-ns-resize hover:bg-[#ee3c22]/40 active:bg-[#ee3c22] transition-colors z-20"
-        title="Drag upward to resize virtual cockpit console"
+        className="absolute top-0 inset-x-0 h-1.5 cursor-ns-resize transition-colors z-20"
+        style={{
+          backgroundColor: isDraggingRef.current ? theme.accent : 'transparent'
+        }}
+        title="Drag upward to resize terminal"
       />
 
       {/* Terminal Title Bar */}
       <div
         style={{ borderColor: theme.borderColor }}
-        className="h-10 border-b flex items-center justify-between px-4 bg-zinc-950/60 z-10 shrink-0"
+        className="h-10 border-b flex items-center justify-between px-4 bg-zinc-950/20 z-10 shrink-0"
       >
         <div className="flex items-center space-x-2 text-[10px] uppercase tracking-wider text-zinc-400 font-semibold selection:bg-transparent">
-          <Terminal size={14} className="text-[#ee3c22]" />
-          <span>Interactive Luau Terminal Buffer</span>
+          <Terminal size={14} style={{ color: theme.accent }} />
+          <span>Terminal console buffer</span>
         </div>
 
         <div className="flex items-center space-x-1">
@@ -120,7 +123,7 @@ export default function TerminalPanel({
             onClick={() => onSendCommand('diagnose')}
             className="flex items-center space-x-1 px-2.5 py-1 text-[9px] rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white transition uppercase font-semibold"
           >
-            <RefreshCw size={10} className="text-[#ee3c22]" />
+            <RefreshCw size={10} style={{ color: theme.accent }} />
             <span>Diagnose</span>
           </button>
           
@@ -137,11 +140,14 @@ export default function TerminalPanel({
       {/* Log Feed Buffer */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 space-y-2 select-text selection:bg-[#ee3c22]/20 text-[11px] leading-relaxed"
+        className="flex-1 overflow-y-auto p-4 space-y-2 select-text text-[11px] leading-relaxed"
+        style={{
+          color: theme.isLight ? '#1f2937' : '#e4e4e7',
+        }}
       >
         {lines.length === 0 ? (
-          <div className="text-zinc-600 text-xs text-center py-6">
-            Terminal standard streams listening. Type 'help' or click 'Diagnose' to initiate calibration checks.
+          <div className="text-zinc-500 text-xs text-center py-6">
+            Terminal console active. Type 'help' to check standard sandboxed diagnostic commands.
           </div>
         ) : (
           lines.map((line) => {
@@ -149,21 +155,25 @@ export default function TerminalPanel({
             let prefix = '● ';
 
             if (line.type === 'success') {
-              rowColor = 'text-emerald-400';
+              rowColor = 'text-green-500';
               prefix = '✔ ';
             } else if (line.type === 'warning') {
-              rowColor = 'text-amber-400';
+              rowColor = 'text-amber-500';
               prefix = '⚠ ';
             } else if (line.type === 'error') {
               rowColor = 'text-rose-500 font-bold';
               prefix = '✘ ';
             } else if (line.type === 'input') {
-              rowColor = 'text-[#ee3c22] font-semibold';
+              rowColor = 'font-semibold';
               prefix = '$ ';
             }
 
             return (
-              <div key={line.id} className={`flex items-start ${rowColor}`}>
+              <div 
+                key={line.id} 
+                className={`flex items-start ${rowColor}`}
+                style={line.type === 'input' ? { color: theme.accent } : undefined}
+              >
                 <span className="shrink-0 mr-1.5 opacity-80">{prefix}</span>
                 <span className="font-mono break-all whitespace-pre-wrap">{line.text}</span>
               </div>
@@ -176,20 +186,20 @@ export default function TerminalPanel({
       <form
         onSubmit={handleSubmit}
         style={{ borderColor: theme.borderColor }}
-        className="h-10 border-t flex items-center px-4 bg-zinc-950/80 shrink-0"
+        className="h-10 border-t flex items-center px-4 bg-zinc-950/60 shrink-0"
       >
-        <span className="text-[#ee3c22] font-extrabold mr-2 select-none">$</span>
+        <span style={{ color: theme.accent }} className="font-extrabold mr-2 select-none">$</span>
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Command standard inputs (e.g., compile, run, diagnose, help, theme)..."
-          className="flex-1 bg-transparent border-none text-zinc-100 outline-none placeholder-zinc-700 font-mono text-[11px]"
+          placeholder="Command (e.g. compile, run, clear, help)..."
+          className="flex-1 bg-transparent border-none text-zinc-100 outline-none placeholder-zinc-650 font-mono text-[11px]"
         />
         <button
           type="submit"
-          className="text-[10px] text-zinc-500 hover:text-[#ee3c22] font-semibold uppercase tracking-widest font-mono flex items-center"
+          className="text-[10px] text-zinc-500 hover:text-zinc-300 font-semibold uppercase tracking-widest font-mono flex items-center"
         >
           <span>Send</span>
           <ArrowUpRight size={12} className="ml-0.5" />

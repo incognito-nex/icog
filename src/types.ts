@@ -77,6 +77,27 @@ export interface UserSettings {
     wordWrap: 'on' | 'off';
     minimap: boolean;
     autoSave: boolean;
+    lineNumbers: 'on' | 'off';
+    cursorBlinking: 'smooth' | 'blink' | 'expand' | 'phase';
+    cursorStyle: 'line' | 'block' | 'underline';
+    smoothCaret: boolean;
+    bracketAutocomplete: boolean;
+  };
+  terminal: {
+    clearOnRun: boolean;
+    showTimestamp: boolean;
+    fontScale: number;
+    simulatedLatency: number;
+    bufferLimit: number;
+    bellSound: boolean;
+  };
+  gitSync: {
+    enabled: boolean;
+    repositoryUrl: string;
+    syncBranch: string;
+    autoPush: boolean;
+    commitMessage: string;
+    lastSyncedAt: string | null;
   };
   appearance: {
     themeId: string;
@@ -84,7 +105,7 @@ export interface UserSettings {
     animationsSpeed: 'slow' | 'normal' | 'fast';
   };
   syntax: {
-    engineId: 'official' | string; // official or custom syntax ID
+    engineId: string; // Active syntax ID e.g. 'studio-classic', 'roblox-luau', etc.
   };
   account: {
     username: string;

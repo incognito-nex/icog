@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FolderPlus, FilePlus, ChevronRight, ChevronDown, Folder, FileCode, Play,
-  MoreVertical, Edit, Trash2, Copy, CornerDownRight, Star, Heart, FileText, ArrowRight
+  MoreVertical, Edit, Trash2, Copy, CornerDownRight, Star, Heart, FileText, 
+  ArrowRight, Lock, Code2, AlertTriangle, X
 } from 'lucide-react';
 import { FileNode, AppTheme } from '../types';
 
@@ -34,6 +35,8 @@ export default function FileExplorer({
     'root-scripts': true,
     'root-modules': true,
   });
+
+  // Floating Context Menu State
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -41,16 +44,43 @@ export default function FileExplorer({
     nodeType: 'file' | 'folder';
   } | null>(null);
 
-  const toggleFolder = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpandedFolders(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+  // Floating Empty Space Context Menu State
+  const [emptySpaceMenu, setEmptySpaceMenu] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+
+  // Custom HUD Dialog Modal State (No generic browser prompts)
+  const [activeModal, setActiveModal] = useState<'create_file' | 'create_folder' | 'rename' | 'delete' | 'move' | null>(null);
+  const [modalNodeId, setModalNodeId] = useState<string | null>(null);
+  const [modalParentId, setModalParentId] = useState<string | null>(null);
+  const [modalInputValue, setModalInputValue] = useState('');
+  const [modalError, setModalError] = useState<string | null>(null);
+
+  const getFileIcon = (fileName: string) => {
+    const lower = fileName.toLowerCase();
+    if (lower.endsWith('.lua') || lower.endsWith('.luau')) {
+      return <FileCode size={13} style={{ color: '#38bdf8' }} className="shrink-0 animate-pulse" />;
+    }
+    if (lower.endsWith('.txt')) {
+      return <FileText size={13} style={{ color: '#94a3b8' }} className="shrink-0" />;
+    }
+    if (lower.endsWith('.py')) {
+      return <Code2 size={13} style={{ color: '#f59e0b' }} className="shrink-0" />;
+    }
+    if (lower.endsWith('.json')) {
+      return <Code2 size={13} style={{ color: '#ec4899' }} className="shrink-0" />;
+    }
+    if (lower.includes('.env')) {
+      return <Lock size={13} style={{ color: '#10b981' }} className="shrink-0" />;
+    }
+    return <FileCode size={13} style={{ color: theme.accent }} className="shrink-0" />;
   };
 
   const handleContextMenu = (e: React.MouseEvent, nodeId: string, nodeType: 'file' | 'folder') => {
     e.preventDefault();
+    e.stopPropagation();
+    setEmptySpaceMenu(null);
     setContextMenu({
       x: e.clientX,
       y: e.clientY,
@@ -59,29 +89,39 @@ export default function FileExplorer({
     });
   };
 
-  const closeContextMenu = () => {
+  const handleEmptySpaceContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
     setContextMenu(null);
+    setEmptySpaceMenu({
+      x: e.clientX,
+      y: e.clientY
+    });
   };
 
-  // Close context menu on general click
-  React.useEffect(() => {
-    window.addEventListener('click', closeContextMenu);
-    return () => window.removeEventListener('click', closeContextMenu);
+  const closeMenus = () => {
+    setContextMenu(null);
+    setEmptySpaceMenu(null);
+  };
+
+  // Listen globally to clean popups on normal clicks
+  useEffect(() => {
+    window.addEventListener('click', closeMenus);
+    return () => window.removeEventListener('click', closeMenus);
   }, []);
 
+  // Modal Initiators (Replacing prompt/confirm overrides!)
   const triggerRename = (id: string, currentName: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const newName = prompt('Rename node:', currentName);
-    if (newName && newName.trim() && newName !== currentName) {
-      onRenameNode(id, newName.trim());
-    }
+    setModalNodeId(id);
+    setModalInputValue(currentName);
+    setModalError(null);
+    setActiveModal('rename');
   };
 
   const triggerDelete = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('Are you sure you want to permanently delete this file node?')) {
-      onDeleteNode(id);
-    }
+    setModalNodeId(id);
+    setActiveModal('delete');
   };
 
   const triggerDuplicate = (id: string, e: React.MouseEvent) => {
@@ -96,29 +136,50 @@ export default function FileExplorer({
 
   const triggerMove = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    // list available directories
-    const folders = files.filter(f => f.type === 'folder' && f.id !== id);
-    const options = folders.map(f => `"${f.name}" (ID: ${f.id})`).join('\n');
-    const destId = prompt(
-      `Move item. Enter target folder ID (or leave blank for root):\n\nAvailable Folders:\n` +
-      folders.map(f => `- ${f.name} (use ID: ${f.id})`).join('\n') + `\n\nEnter ID:`,
-      ''
-    );
-    if (destId !== null) {
-      const parentId = destId.trim() === '' ? null : destId.trim();
-      onMoveNode(id, parentId);
-    }
+    setModalNodeId(id);
+    setModalParentId(''); // default to root
+    setActiveModal('move');
   };
 
   const handleCreateInFolder = (type: 'file' | 'folder', parentId: string | null, e: React.MouseEvent) => {
     e.stopPropagation();
-    const name = prompt(`Enter new ${type === 'file' ? 'Luau script' : 'folder'} name:`, type === 'file' ? 'NewScript.luau' : 'NewFolder');
-    if (name && name.trim()) {
-      onCreateNode(name.trim(), type, parentId);
-      if (parentId) {
-        setExpandedFolders(prev => ({ ...prev, [parentId]: true }));
-      }
+    setModalParentId(parentId);
+    setModalInputValue(type === 'file' ? 'NewScript.luau' : 'NewFolder');
+    setModalError(null);
+    setActiveModal(type === 'file' ? 'create_file' : 'create_folder');
+  };
+
+  // Submit Modal changes
+  const submitModal = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = modalInputValue.trim();
+    if (!val && activeModal !== 'delete' && activeModal !== 'move') {
+      setModalError('Value cannot be empty');
+      return;
     }
+
+    if (activeModal === 'rename' && modalNodeId) {
+      onRenameNode(modalNodeId, val);
+    } else if (activeModal === 'create_file') {
+      onCreateNode(val, 'file', modalParentId);
+      if (modalParentId) {
+        setExpandedFolders(prev => ({ ...prev, [modalParentId]: true }));
+      }
+    } else if (activeModal === 'create_folder') {
+      onCreateNode(val, 'folder', modalParentId);
+      if (modalParentId) {
+        setExpandedFolders(prev => ({ ...prev, [modalParentId]: true }));
+      }
+    } else if (activeModal === 'delete' && modalNodeId) {
+      onDeleteNode(modalNodeId);
+    } else if (activeModal === 'move' && modalNodeId) {
+      const pid = modalParentId === '' ? null : modalParentId;
+      onMoveNode(modalNodeId, pid);
+    }
+
+    setActiveModal(null);
+    setModalNodeId(null);
+    setModalParentId(null);
   };
 
   const renderTree = (parentId: string | null, depth: number = 0) => {
@@ -168,16 +229,16 @@ export default function FileExplorer({
               )}
 
               {isFolder ? (
-                <Folder size={14} className="text-zinc-500 shrink-0" />
+                <Folder size={14} className="text-zinc-400 shrink-0" />
               ) : (
-                <FileCode size={14} style={{ color: theme.accent }} className="shrink-0" />
+                getFileIcon(node.name)
               )}
 
               <span className={`truncate ${isActive ? 'font-semibold' : ''}`}>{node.name}</span>
             </div>
 
-            {/* Quick Hover actions for quick workflows */}
-            <div className="hidden group-hover:flex items-center space-x-1 shrink-0 bg-[#0d0e12]/90 backdrop-blur-xs pl-2">
+            {/* Quick hover nodes */}
+            <div className="hidden group-hover:flex items-center space-x-1 shrink-0 bg-[#0d0e12]/95 backdrop-blur-xs pl-2">
               {isFolder ? (
                 <>
                   <button
@@ -218,13 +279,12 @@ export default function FileExplorer({
             </div>
           </div>
 
-          {/* Children nodes */}
+          {/* Children nodes connector indicators */}
           {isFolder && isExpanded && (
             <div className="relative">
-              {/* Connective branch indicator */}
               <div
                 style={{ left: `${Math.max(14, depth * 12 + 6)}px`, borderColor: theme.borderColor }}
-                className="absolute top-0 bottom-2.5 border-l opacity-25 pointer-events-none"
+                className="absolute top-0 bottom-2.5 border-l opacity-20 pointer-events-none"
               />
               {renderTree(node.id, depth + 1)}
             </div>
@@ -236,6 +296,7 @@ export default function FileExplorer({
 
   return (
     <div
+      onContextMenu={handleEmptySpaceContextMenu}
       style={{
         backgroundColor: theme.sidebarBg,
         borderColor: theme.borderColor
@@ -248,18 +309,18 @@ export default function FileExplorer({
         className="p-3 border-b space-y-2 shrink-0 bg-black/20"
       >
         <div className="flex items-center justify-between text-[10px] uppercase font-bold tracking-widest text-zinc-500 font-sans">
-          <span>Virtual Workspace Trees</span>
+          <span>Workspace</span>
           <div className="flex items-center space-x-1">
             <button
               onClick={(e) => handleCreateInFolder('file', null, e)}
-              className="p-1 hover:text-zinc-200 transition rounded"
+              className="p-1 hover:text-zinc-200 transition rounded cursor-pointer"
               title="New Root File"
             >
               <FilePlus size={13} />
             </button>
             <button
               onClick={(e) => handleCreateInFolder('folder', null, e)}
-              className="p-1 hover:text-zinc-200 transition rounded"
+              className="p-1 hover:text-zinc-200 transition rounded cursor-pointer"
               title="New Root Folder"
             >
               <FolderPlus size={13} />
@@ -268,10 +329,10 @@ export default function FileExplorer({
         </div>
       </div>
 
-      {/* Actual tree explorer scroll container */}
+      {/* Workspace files list */}
       <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5 max-h-[calc(100vh-140px)]">
         {files.filter(f => f.parentId === null).length === 0 ? (
-          <div className="p-4 text-center text-zinc-600 text-xs font-mono">
+          <div className="p-4 text-center text-zinc-650 text-xs font-mono">
             Empty workspace. Use file icons above.
           </div>
         ) : (
@@ -279,18 +340,18 @@ export default function FileExplorer({
         )}
       </div>
 
-      {/* Direct Quick Info Badge */}
+      {/* Dynamic I/O Active badge */}
       <div
         style={{ borderColor: theme.borderColor }}
         className="p-2.5 border-t bg-[#0d0e12]/60 text-left font-sans flex items-center space-x-2 pointer-events-none"
       >
-        <Heart size={11} className="text-red-500 animate-pulse shrink-0 fill-current" />
+        <Heart size={11} className="text-emerald-500 animate-pulse shrink-0 fill-current" />
         <span className="text-[9px] font-mono tracking-wider text-zinc-500 uppercase">
           Dynamic IO active
         </span>
       </div>
 
-      {/* High-Fidelity Custom Floating Context Menu */}
+      {/* Context Menu for File Items */}
       {contextMenu && (
         <div
           style={{
@@ -300,11 +361,11 @@ export default function FileExplorer({
             borderColor: theme.borderColor,
             boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
           }}
-          className="fixed z-50 border rounded-lg py-1.5 w-44 font-sans text-xs flex flex-col pointer-events-auto bg-[#14161e] select-none"
+          className="fixed z-50 border rounded-xl py-1.5 w-44 font-sans text-xs flex flex-col pointer-events-auto bg-[#14161e] select-none"
         >
           <button
             onClick={(e) => triggerRename(contextMenu.nodeId, files.find(f => f.id === contextMenu.nodeId)?.name || '', e)}
-            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2"
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
           >
             <Edit size={12} />
             <span>Rename Node</span>
@@ -312,15 +373,15 @@ export default function FileExplorer({
           
           <button
             onClick={(e) => triggerDuplicate(contextMenu.nodeId, e)}
-            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2"
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
           >
             <Copy size={12} />
-            <span>Duplicate File</span>
+            <span>Duplicate Node</span>
           </button>
 
           <button
             onClick={(e) => triggerMove(contextMenu.nodeId, e)}
-            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2"
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
           >
             <CornerDownRight size={12} />
             <span>Move Path...</span>
@@ -329,22 +390,159 @@ export default function FileExplorer({
           {contextMenu.nodeType === 'file' && (
             <button
               onClick={(e) => triggerToggleFav(contextMenu.nodeId, e)}
-              className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2"
+              className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
             >
               <Star size={12} />
               <span>Toggle Favorite</span>
             </button>
           )}
 
-          <div className="h-[1px] bg-zinc-800 my-1" />
+          <div className="h-[1px] bg-zinc-800/60 my-1" />
 
           <button
             onClick={(e) => triggerDelete(contextMenu.nodeId, e)}
-            className="px-3.5 py-1.5 text-left text-rose-500 hover:bg-rose-500/10 transition flex items-center space-x-2 font-semibold"
+            className="px-3.5 py-1.5 text-left text-rose-500 hover:bg-rose-500/10 transition flex items-center space-x-2 font-semibold cursor-pointer"
           >
             <Trash2 size={12} />
             <span>Purge Node</span>
           </button>
+        </div>
+      )}
+
+      {/* Empty Space Context Menu */}
+      {emptySpaceMenu && (
+        <div
+          style={{
+            top: `${emptySpaceMenu.y}px`,
+            left: `${emptySpaceMenu.x}px`,
+            backgroundColor: theme.sidebarBg,
+            borderColor: theme.borderColor,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+          }}
+          className="fixed z-50 border rounded-xl py-1.5 w-48 font-sans text-xs flex flex-col pointer-events-auto bg-[#14161e] select-none"
+        >
+          <button
+            onClick={(e) => handleCreateInFolder('file', null, e)}
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
+          >
+            <FilePlus size={12} />
+            <span>Create New File</span>
+          </button>
+
+          <button
+            onClick={(e) => handleCreateInFolder('folder', null, e)}
+            className="px-3.5 py-1.5 text-left text-zinc-300 hover:bg-[#ee3c22]/10 hover:text-[#ee3c22] transition flex items-center space-x-2 cursor-pointer"
+          >
+            <FolderPlus size={12} />
+            <span>Create New Folder</span>
+          </button>
+        </div>
+      )}
+
+      {/* Modular HUD Dialogues (Better than standard alerts) */}
+      {activeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs font-sans p-4">
+          <div 
+            style={{ 
+              backgroundColor: theme.cardBg, 
+              borderColor: theme.borderColor,
+              boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
+            }}
+            className="w-full max-w-sm border rounded-2xl p-5 space-y-4 text-left animate-in fade-in zoom-in-95 duration-150"
+          >
+            <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: theme.borderColor }}>
+              <span className="text-xs font-bold font-mono uppercase tracking-widest text-zinc-300" style={{ color: theme.textMain }}>
+                {activeModal === 'create_file' && 'Assemble Script File'}
+                {activeModal === 'create_folder' && 'Deploy Folder Node'}
+                {activeModal === 'rename' && 'Rename Node Buffer'}
+                {activeModal === 'delete' && 'Purge Data Segment'}
+                {activeModal === 'move' && 'Re-Link Tree Path'}
+              </span>
+              <button 
+                onClick={() => setActiveModal(null)} 
+                className="text-zinc-500 hover:text-white transition cursor-pointer"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            <form onSubmit={submitModal} className="space-y-4">
+              
+              {/* Conditional parameters based on modal actions */}
+              {(activeModal === 'create_file' || activeModal === 'create_folder' || activeModal === 'rename') && (
+                <div className="space-y-1">
+                  <label className="text-[9px] font-mono font-bold tracking-widest text-[#ee3c22] uppercase">Name Identity :</label>
+                  <input
+                    autoFocus
+                    type="text"
+                    value={modalInputValue}
+                    onChange={(e) => {
+                      setModalInputValue(e.target.value);
+                      setModalError(null);
+                    }}
+                    className="w-full py-2 px-3 border rounded-xl font-mono text-xs focus:outline-none focus:border-[#ee3c22]"
+                    style={{
+                      backgroundColor: theme.isLight ? '#f4f4f5' : '#07080a',
+                      color: theme.textMain,
+                      borderColor: theme.borderColor
+                    }}
+                  />
+                </div>
+              )}
+
+              {activeModal === 'delete' && (
+                <div className="flex items-start space-x-3 text-xs leading-relaxed">
+                  <AlertTriangle className="text-rose-500 shrink-0 mt-0.5" size={16} />
+                  <p className="text-zinc-300" style={{ color: theme.textMain }}>
+                    Are you absolutely sure you want to permanently purge this database node file index? This operation is irreversible.
+                  </p>
+                </div>
+              )}
+
+              {activeModal === 'move' && (
+                <div className="space-y-2">
+                  <label className="text-[9px] font-mono font-bold tracking-widest text-[#ee3c22] uppercase block">Select Dest Folder :</label>
+                  <select
+                    value={modalParentId || ''}
+                    onChange={(e) => setModalParentId(e.target.value)}
+                    className="w-full py-2 px-3 border rounded-xl font-mono text-xs focus:outline-none focus:border-[#ee3c22]"
+                    style={{
+                      backgroundColor: theme.isLight ? '#f4f4f5' : '#07080a',
+                      color: theme.textMain,
+                      borderColor: theme.borderColor
+                    }}
+                  >
+                    <option value="">[Workspace Root]</option>
+                    {files.filter(f => f.type === 'folder' && f.id !== modalNodeId).map((f) => (
+                      <option key={f.id} value={f.id}>{f.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {modalError && (
+                <p className="text-[10px] text-rose-500 font-semibold font-mono uppercase">{modalError}</p>
+              )}
+
+              <div className="flex items-center justify-end space-x-2 pt-2 border-t" style={{ borderColor: theme.borderColor }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="px-3.5 py-1.5 text-[10px] font-mono hover:bg-zinc-800/10 rounded-lg text-zinc-400 uppercase transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 text-[10px] font-mono font-bold rounded-lg text-[#ffffff] uppercase transition hover:opacity-90 cursor-pointer"
+                  style={{ backgroundColor: activeModal === 'delete' ? '#ef4444' : theme.accent }}
+                >
+                  {activeModal === 'delete' ? 'Purge Now' : 'Assign'}
+                </button>
+              </div>
+
+            </form>
+          </div>
         </div>
       )}
     </div>
