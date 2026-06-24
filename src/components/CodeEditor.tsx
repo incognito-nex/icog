@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Editor, { Monaco, useMonaco } from '@monaco-editor/react';
+import Editor, { Monaco, useMonaco, loader } from '@monaco-editor/react';
 import { 
   X, Pin, Save, Star, Terminal, Play, RotateCcw, AlertTriangle, CheckCircle,
   MoreVertical, FileCode, Sparkles, Sliders, AlertCircle, Copy, Search, HelpCircle,
-  Minimize2, Maximize2
+  Minimize2, Maximize2, Syringe, Trash2
 } from 'lucide-react';
 import { FileNode, TabItem, AppTheme, UserSettings, CustomSyntaxProfile } from '../types';
 
@@ -57,6 +57,132 @@ export default function CodeEditor({
   const [renameInputValue, setRenameInputValue] = useState('');
   const [renameError, setRenameError] = useState<string | null>(null);
 
+  // Monaco Loader / Failover States
+  const [editorMode, setEditorMode] = useState<'monaco' | 'lite'>('monaco');
+  const [monacoLoaded, setMonacoLoaded] = useState(false);
+  const [monacoLoadingError, setMonacoLoadingError] = useState(false);
+
+  // Fallback refs
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const gutterRef = useRef<HTMLDivElement>(null);
+
+  const handleTextareaScroll = () => {
+    if (textareaRef.current && gutterRef.current) {
+      gutterRef.current.scrollTop = textareaRef.current.scrollTop;
+    }
+  };
+
+  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    const pairs: Record<string, string> = {
+      '"': '"',
+      "'": "'",
+      '(': ')',
+      '[': ']',
+      '{': '}'
+    };
+
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const textarea = e.currentTarget;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const spaces = ' '.repeat(settings.editor.tabSize || 4);
+      const value = textarea.value;
+      const newValue = value.substring(0, start) + spaces + value.substring(end);
+      
+      setEditorVal(newValue);
+      handleEditorChange(newValue);
+      
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + spaces.length;
+      }, 0);
+    } else if (pairs[e.key] !== undefined && settings.editor.bracketAutocomplete !== false) {
+      e.preventDefault();
+      const textarea = e.currentTarget;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const value = textarea.value;
+      const closingChar = pairs[e.key];
+      
+      if (start !== end) {
+        // Wrap selection
+        const selection = value.substring(start, end);
+        const newValue = value.substring(0, start) + e.key + selection + closingChar + value.substring(end);
+        setEditorVal(newValue);
+        handleEditorChange(newValue);
+        
+        setTimeout(() => {
+          textarea.selectionStart = start + 1;
+          textarea.selectionEnd = end + 1;
+        }, 0);
+      } else {
+        // Simple insert pair
+        const newValue = value.substring(0, start) + e.key + closingChar + value.substring(end);
+        setEditorVal(newValue);
+        handleEditorChange(newValue);
+        
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + 1;
+        }, 0);
+      }
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const textarea = e.currentTarget;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const value = textarea.value;
+
+      // Calculate current line text before cursor to preserve indentation
+      const beforeCursor = value.substring(0, start);
+      const linesBefore = beforeCursor.split('\n');
+      const currentLine = linesBefore[linesBefore.length - 1];
+
+      // Extract leading whitespace
+      const matchIndent = currentLine.match(/^(\s*)/);
+      const currentIndent = matchIndent ? matchIndent[1] : '';
+
+      // Check if we need to increase indentation (e.g., ends with: then, do, repeat, else, elseif, function, or {)
+      const trimmedLine = currentLine.trim();
+      const needsIncrease = /\b(then|do|repeat|else|elseif|function)\b\s*(\s*\(.*)?$|\{\s*$/.test(trimmedLine);
+
+      const tabSize = settings.editor.tabSize || 4;
+      const extraIndent = ' '.repeat(tabSize);
+      const nextIndent = needsIncrease ? currentIndent + extraIndent : currentIndent;
+
+      const newlineAndIndent = '\n' + nextIndent;
+      const newValue = value.substring(0, start) + newlineAndIndent + value.substring(end);
+
+      setEditorVal(newValue);
+      handleEditorChange(newValue);
+
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = start + newlineAndIndent.length;
+      }, 0);
+    }
+  };
+
+  useEffect(() => {
+    if (monacoLoaded) return;
+
+    let active = true;
+    loader.init()
+      .then(() => {
+        if (active) {
+          setMonacoLoaded(true);
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          console.error("Failed to load Monaco Editor from CDN:", err);
+          setMonacoLoadingError(true);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [monacoLoaded]);
+
   // Retrieve current active code node
   const activeFile = files.find(f => f.id === activeFileId);
 
@@ -80,6 +206,56 @@ export default function CodeEditor({
       monaco.languages.register({ id: 'luau' });
     }
 
+    // Advanced Language Configuration for Luau (brackets, auto-indent, block openings, and auto-closing)
+    monaco.languages.setLanguageConfiguration('luau', {
+      comments: {
+        lineComment: '--',
+        blockComment: ['--[[', ']]'],
+      },
+      brackets: [
+        ['{', '}'],
+        ['[', ']'],
+        ['(', ')'],
+      ],
+      autoClosingPairs: [
+        { open: '{', close: '}' },
+        { open: '[', close: ']' },
+        { open: '(', close: ')' },
+        { open: '"', close: '"', notIn: ['string'] },
+        { open: "'", close: "'", notIn: ['string', 'comment'] },
+      ],
+      surroundingPairs: [
+        { open: '{', close: '}' },
+        { open: '[', close: ']' },
+        { open: '(', close: ')' },
+        { open: '"', close: '"' },
+        { open: "'", close: "'" },
+      ],
+      indentationRules: {
+        // Increase indent when current line ends with: then, do, repeat, else, elseif, function, or {
+        increaseIndentPattern: /((^|[^"'])\b(then|do|repeat|else|elseif)\b\s*(?!local\b)([^"']*--.*)?$)|(\bfunction\b\s*\(.*$)|(\{\s*$)/i,
+        // Decrease indent when current line is end, else, elseif, until, or }
+        decreaseIndentPattern: /^\s*(end|else|elseif|until|\})\s*$/i
+      },
+      onEnterRules: [
+        {
+          // Matches lines that open a block followed by closing characters
+          beforeText: /((^|[^"'])\b(then|do|repeat|else|elseif)\b\s*(?!local\b)([^"']*--.*)?$)|(\bfunction\b\s*\(.*$)|(\{\s*$)/i,
+          afterText: /^\s*(end|until|\})\s*$/i,
+          action: {
+            indentAction: monaco.languages.IndentAction.IndentOutdent
+          }
+        },
+        {
+          // Matches general block opening on enter
+          beforeText: /((^|[^"'])\b(then|do|repeat|else|elseif)\b\s*(?!local\b)([^"']*--.*)?$)|(\bfunction\b\s*\(.*$)|(\{\s*$)/i,
+          action: {
+            indentAction: monaco.languages.IndentAction.Indent
+          }
+        }
+      ]
+    });
+
     // Build lists
     const keywordsList = activeSyntax.keywords.length > 0 ? activeSyntax.keywords : ['local', 'function', 'return', 'end'];
     const functionsList = activeSyntax.functions.length > 0 ? activeSyntax.functions : ['print', 'warn'];
@@ -99,6 +275,14 @@ export default function CodeEditor({
       
       tokenizer: {
         root: [
+          // dotted identifiers first (e.g., Drawing.new, debug.getinfo)
+          [/[a-zA-Z_]\w*\.[a-zA-Z_]\w*/, {
+            cases: {
+              '@functions': 'custom-func',
+              '@default': 'identifier'
+            }
+          }],
+
           // identifiers and keywords
           [/[a-zA-Z_]\w*/, {
             cases: {
@@ -297,6 +481,14 @@ export default function CodeEditor({
         onSaveFile(activeFileId, updatedVal);
       }
     }
+  };
+
+  const handleClearEditorText = () => {
+    if (!activeFileId) return;
+    setEditorVal('');
+    setFiles(prev => prev.map(f => f.id === activeFileId ? { ...f, content: '' } : f));
+    // Also trigger save so the cleared file is immediately committed
+    onSaveFile(activeFileId, '');
   };
 
   // Keyboard save manual hook: Ctrl + S or Command + S
@@ -554,7 +746,7 @@ export default function CodeEditor({
                 className="p-1.5 px-3 border rounded text-[10px] font-mono font-bold flex items-center space-x-1 hover:opacity-90 active:scale-95 transition"
                 title="Inject current script node"
               >
-                <Sparkles size={11} style={{ color: '#10b981' }} />
+                <Syringe size={11} style={{ color: '#10b981' }} />
                 <span>Inject</span>
               </button>
 
@@ -569,12 +761,12 @@ export default function CodeEditor({
               </button>
 
               <button
-                onClick={() => onClearTerminal?.()}
+                onClick={handleClearEditorText}
                 style={{ backgroundColor: `rgba(239, 68, 68, 0.08)`, color: '#ef4444', borderColor: `rgba(239, 68, 68, 0.2)` }}
                 className="p-1.5 px-3 border rounded text-[10px] font-mono font-bold flex items-center space-x-1 hover:opacity-90 active:scale-95 transition"
-                title="Clear terminal outputs"
+                title="Clear current editor code content"
               >
-                <Terminal size={11} style={{ color: '#ef4444' }} />
+                <Trash2 size={11} style={{ color: '#ef4444' }} />
                 <span>Clear</span>
               </button>
             </div>
@@ -585,31 +777,95 @@ export default function CodeEditor({
       {/* Editor Main Client Panel */}
       <div className="flex-1 min-h-0 bg-zinc-950 flex flex-col relative">
         {activeFileId ? (
-          <div className="flex-1 min-h-0 text-left">
-            <Editor
-              height="100%"
-              language="luau"
-              value={editorVal}
-              onChange={handleEditorChange}
-              theme="incognitoTheme"
-              options={{
-                fontSize: settings.editor.fontSize,
-                fontFamily: settings.editor.fontFamily,
-                tabSize: settings.editor.tabSize,
-                wordWrap: settings.editor.wordWrap,
-                minimap: { enabled: settings.editor.minimap },
-                automaticLayout: true,
-                padding: { top: 8, bottom: 8 },
-                cursorBlinking: 'smooth',
-                cursorWidth: 2,
-                folding: true,
-                autoIndent: 'full',
-                bracketPairColorization: { enabled: true },
-                colorDecorators: true,
-                formatOnPaste: true,
-                contextmenu: true,
-              }}
-            />
+          <div className="flex-1 min-h-0 text-left flex flex-col relative h-full">
+            {editorMode === 'monaco' ? (
+              <Editor
+                height="100%"
+                language="luau"
+                value={editorVal}
+                onChange={handleEditorChange}
+                theme="incognitoTheme"
+                options={{
+                  fontSize: settings.editor.fontSize,
+                  fontFamily: settings.editor.fontFamily,
+                  tabSize: settings.editor.tabSize,
+                  wordWrap: settings.editor.wordWrap,
+                  minimap: { enabled: settings.editor.minimap },
+                  automaticLayout: true,
+                  padding: { top: 8, bottom: 8 },
+                  cursorBlinking: 'smooth',
+                  cursorWidth: 2,
+                  folding: true,
+                  autoIndent: 'full',
+                  bracketPairColorization: { enabled: true },
+                  colorDecorators: true,
+                  formatOnPaste: true,
+                  contextmenu: true,
+                  autoClosingBrackets: settings.editor.bracketAutocomplete ? 'always' : 'never',
+                  autoClosingQuotes: settings.editor.bracketAutocomplete ? 'always' : 'never',
+                  autoSurround: settings.editor.bracketAutocomplete ? 'always' : 'never',
+                  quickSuggestions: { other: true, comments: false, strings: false },
+                  suggestOnTriggerCharacters: true,
+                  acceptSuggestionOnEnter: 'on',
+                  tabCompletion: 'on',
+                  parameterHints: { enabled: true },
+                  dragAndDrop: true,
+                  wordBasedSuggestions: 'allDocuments'
+                }}
+              />
+            ) : (
+              <div className="flex-1 flex min-h-0 w-full relative overflow-hidden" style={{ backgroundColor: theme.editorBg }}>
+                {/* Line Gutter */}
+                <div 
+                  ref={gutterRef}
+                  className="w-12 select-none pr-2.5 text-right font-mono overflow-hidden border-r shrink-0 opacity-40 py-2 select-none scrollbar-none"
+                  style={{ 
+                    borderColor: theme.borderColor, 
+                    color: theme.isLight ? '#71717a' : '#a1a1aa',
+                    backgroundColor: theme.headerBg 
+                  }}
+                >
+                  {Array.from({ length: editorVal.split('\n').length || 1 }).map((_, i) => (
+                    <div 
+                      key={i} 
+                      style={{ 
+                        fontSize: `${settings.editor.fontSize}px`,
+                        fontFamily: settings.editor.fontFamily,
+                        height: '22px',
+                        lineHeight: '22px'
+                      }}
+                    >
+                      {i + 1}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Textarea Area */}
+                <textarea
+                  ref={textareaRef}
+                  value={editorVal}
+                  onChange={(e) => handleEditorChange(e.target.value)}
+                  onScroll={handleTextareaScroll}
+                  onKeyDown={handleTextareaKeyDown}
+                  spellCheck={false}
+                  placeholder="-- Start writing your Luau code here..."
+                  className="flex-1 h-full py-2 px-3 resize-none focus:outline-none focus:ring-0 border-0 font-mono overflow-y-auto"
+                  style={{
+                    fontSize: `${settings.editor.fontSize}px`,
+                    fontFamily: settings.editor.fontFamily,
+                    lineHeight: '22px',
+                    backgroundColor: theme.editorBg,
+                    color: theme.isLight ? '#18181b' : '#f1f5f9',
+                  }}
+                />
+
+                {/* Lite Mode Indicator Badge */}
+                <div className="absolute top-3 right-3 bg-zinc-900/90 border border-zinc-800 backdrop-blur-sm rounded-full py-1 px-3 flex items-center space-x-1.5 text-[9px] font-mono font-bold text-zinc-400 select-none z-10 shadow-lg">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  <span>Lite Mode Fallback</span>
+                </div>
+              </div>
+            )}
 
             {/* Float Save alert */}
             {tabs.find(t => t.fileId === activeFileId)?.isUnsaved && (

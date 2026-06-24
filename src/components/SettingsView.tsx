@@ -29,6 +29,14 @@ export default function SettingsView({
   onTriggerGitSync,
 }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile' | 'experimental'>((initialTab as any) || 'editor');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const triggerToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 4000);
+  };
 
   const handleUpdate = <T extends keyof UserSettings>(section: T, field: keyof UserSettings[T], value: any) => {
     setSettings((prev) => {
@@ -63,12 +71,12 @@ export default function SettingsView({
         const parsed = JSON.parse(event.target?.result as string);
         if (Array.isArray(parsed)) {
           setSyntaxes(parsed);
-          alert('Custom syntax engines loaded successfully.');
+          triggerToast('Custom syntax engines loaded successfully.', 'success');
         } else {
-          alert('Invalid format. Must be an array of syntax engine specifications.');
+          triggerToast('Invalid format. Must be an array of syntax engine specifications.', 'error');
         }
       } catch (err) {
-        alert('Fail to parse syntax file.');
+        triggerToast('Failed to parse syntax file.', 'error');
       }
     };
     fileReader.readAsText(filesList[0]);
@@ -105,7 +113,7 @@ export default function SettingsView({
             editor: 'Editor Dev',
             terminal: 'Terminal Settings',
             gitsync: 'Git Sync',
-            luau: 'Luau Engines',
+            luau: 'Lua/u syntax',
             appearance: 'Skin/Themes',
             profile: 'Profile',
             experimental: 'Experimental'
@@ -596,35 +604,15 @@ export default function SettingsView({
           </div>
         )}
 
-        {/* TAB 4: LUAU ENGINE */}
+        {/* TAB 4: LUA/U SYNTAX */}
         {activeTab === 'luau' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: theme.borderColor }}>
-              <div className="flex items-center space-x-2">
+               <div className="flex items-center space-x-2">
                 <Cpu size={15} style={{ color: theme.accent }} />
                 <h3 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
-                  Luau Highlight Syntax Engines
+                  Lua/u syntax Highlighter
                 </h3>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={handleExportSyntax}
-                  className="flex items-center space-x-1 px-2.5 py-1 text-[9px] rounded-lg border font-bold font-mono hover:opacity-80 transition uppercase"
-                  style={{ backgroundColor: theme.cardBg, borderColor: theme.borderColor, color: theme.textMain }}
-                >
-                  <Download size={10} />
-                  <span>Export JSON</span>
-                </button>
-
-                <label 
-                  className="flex items-center space-x-1 px-2.5 py-1 text-[9px] rounded-lg border font-bold font-mono hover:opacity-80 transition uppercase cursor-pointer"
-                  style={{ backgroundColor: theme.cardBg, borderColor: theme.borderColor, color: theme.textMain }}
-                >
-                  <Upload size={10} />
-                  <span>Import</span>
-                  <input type="file" accept=".json" onChange={handleImportSyntax} className="hidden" />
-                </label>
               </div>
             </div>
 
@@ -874,9 +862,41 @@ export default function SettingsView({
                 </div>
               </label>
             </div>
+
+            <div className="pt-4 border-t" style={{ borderColor: theme.borderColor }}>
+              <h4 className="text-[10px] font-mono uppercase tracking-widest font-bold mb-1.5 text-left text-red-500 flex items-center space-x-1.5">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                <span>Danger Zone</span>
+              </h4>
+              <p className="text-[10px] text-zinc-500 font-mono text-left leading-relaxed mb-3.5">
+                Permanently deletes all scripts, customized syntax settings, appearance profiles, active files, and telemetry state. Restarts application at zero.
+              </p>
+              <div className="text-left">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm("WARNING: This will wipe ALL of your stored files, custom profiles, settings, and reload the application from scratch. Are you absolutely sure you want to proceed?")) {
+                      localStorage.clear();
+                      window.location.reload();
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl border font-mono text-[10px] font-bold uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/30 transition duration-150 active:scale-95 cursor-pointer"
+                >
+                  Clear Data
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
+
+      {/* Floating Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center space-x-2.5 px-4.5 py-3 rounded-2xl border shadow-2xl bg-zinc-900 border-zinc-800 text-xs font-mono transition-all duration-300">
+          <span className={`w-2 h-2 rounded-full inline-block animate-pulse shrink-0 ${toast.type === 'success' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-rose-500 shadow-[0_0_8px_#f43f5e]'}`} />
+          <span className="text-zinc-200 font-bold">{toast.message}</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -57,21 +57,10 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
         style={{ borderColor: theme.borderColor }}
         className="h-14 flex items-center justify-center sm:justify-start px-4 border-b overflow-hidden"
       >
-        <div className="flex items-center space-x-2">
-          {/* Glowing dot calibrated engine symbol */}
-          <div
-            style={{
-              backgroundColor: theme.accent,
-              boxShadow: `0 0 10px ${theme.accent}`,
-            }}
-            className="w-3 h-3 rounded-full shrink-0 flex items-center justify-center animate-pulse"
-          >
-            <div className="w-1 h-1 bg-white rounded-full" />
-          </div>
-          
-          {/* Brand Word - understated */}
+        <div className="w-full flex items-center justify-center">
+          {/* Brand Word - centered, thicker and bigger, no blinking dot */}
           <span 
-            className="hidden sm:inline text-xs font-bold font-mono tracking-widest"
+            className="text-[15px] font-black font-mono tracking-widest"
             style={{ color: theme.accent }}
           >
             INCO-3

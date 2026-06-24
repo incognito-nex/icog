@@ -63,7 +63,10 @@ export default function EditorView({
   // Fullscreen option
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [explorerWidth, setExplorerWidth] = useState(240);
+  const [isDraggingExplorer, setIsDraggingExplorer] = useState(false);
   const isDraggingExplorerRef = useRef(false);
+  const startXRef = useRef(0);
+  const startWidthRef = useRef(0);
 
   // Dynamic Monarch language register when syntax engine changes
   useEffect(() => {
@@ -154,19 +157,24 @@ export default function EditorView({
   const handleExplorerDragStart = (e: React.MouseEvent) => {
     e.preventDefault();
     isDraggingExplorerRef.current = true;
+    setIsDraggingExplorer(true);
+    startXRef.current = e.clientX;
+    startWidthRef.current = explorerWidth;
     document.addEventListener('mousemove', handleExplorerDragMove);
     document.addEventListener('mouseup', handleExplorerDragStop);
   };
 
   const handleExplorerDragMove = (e: MouseEvent) => {
     if (!isDraggingExplorerRef.current) return;
-    const computedWidth = e.clientX;
+    const deltaX = e.clientX - startXRef.current;
+    const computedWidth = startWidthRef.current + deltaX;
     const clamped = Math.max(160, Math.min(400, computedWidth));
     setExplorerWidth(clamped);
   };
 
   const handleExplorerDragStop = () => {
     isDraggingExplorerRef.current = false;
+    setIsDraggingExplorer(false);
     document.removeEventListener('mousemove', handleExplorerDragMove);
     document.removeEventListener('mouseup', handleExplorerDragStop);
   };
@@ -380,7 +388,11 @@ export default function EditorView({
           {/* Explorer Resizer Handle */}
           <div
             onMouseDown={handleExplorerDragStart}
-            className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-zinc-600/40 transition-colors z-20"
+            className={`absolute top-0 right-0 w-1 h-full cursor-col-resize transition-all z-20 ${
+              isDraggingExplorer 
+                ? 'bg-red-500 shadow-[0_0_12px_#ef4444]' 
+                : 'bg-transparent hover:bg-red-500/50'
+            }`}
           />
         </div>
 

@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   FolderPlus, FilePlus, ChevronRight, ChevronDown, Folder, FolderOpen, FileCode, Play,
   MoreVertical, Edit, Trash2, Copy, CornerDownRight, Star, Heart, FileText, 
-  ArrowRight, Lock, Code2, AlertTriangle, X, FileJson, FileTerminal, FileKey, Layers
+  ArrowRight, Lock, Code2, AlertTriangle, X, FileJson, FileTerminal, FileKey, Layers,
+  Database, Image, Binary
 } from 'lucide-react';
 import { FileNode, AppTheme } from '../types';
 
@@ -57,26 +58,144 @@ export default function FileExplorer({
   const [modalInputValue, setModalInputValue] = useState('');
   const [modalError, setModalError] = useState<string | null>(null);
 
+  // Draggable width resize state (X axis)
+  const [sidebarWidth, setSidebarWidth] = useState(224); // default 224px (w-56)
+  const isDraggingRef = React.useRef(false);
+  const startXRef = React.useRef(0);
+  const startWidthRef = React.useRef(224);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isDraggingRef.current = true;
+    setIsDragging(true);
+    startXRef.current = e.clientX;
+    startWidthRef.current = sidebarWidth;
+    document.addEventListener('mousemove', handleResizeMouseMove);
+    document.addEventListener('mouseup', handleResizeMouseUp);
+  };
+
+  const handleResizeMouseMove = (e: MouseEvent) => {
+    if (!isDraggingRef.current) return;
+    const deltaX = e.clientX - startXRef.current;
+    const calculatedWidth = startWidthRef.current + deltaX;
+    const clamped = Math.max(160, Math.min(500, calculatedWidth));
+    setSidebarWidth(clamped);
+  };
+
+  const handleResizeMouseUp = () => {
+    isDraggingRef.current = false;
+    setIsDragging(false);
+    document.removeEventListener('mousemove', handleResizeMouseMove);
+    document.removeEventListener('mouseup', handleResizeMouseUp);
+  };
+
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleResizeMouseMove);
+      document.removeEventListener('mouseup', handleResizeMouseUp);
+    };
+  }, []);
+
   const getFileIcon = (fileName: string) => {
     const lower = fileName.toLowerCase();
+    
+    // Lua / Luau
     if (lower.endsWith('.lua') || lower.endsWith('.luau')) {
-      // VS Code style blue Lua/Luau file icon
-      return <FileCode size={14} style={{ color: '#519aba' }} className="shrink-0" />;
+      return <FileCode size={14} style={{ color: '#00a2ff' }} className="shrink-0" />;
     }
-    if (lower.endsWith('.txt')) {
-      // VS Code dark gray document file icon
-      return <FileText size={14} style={{ color: '#90a4ae' }} className="shrink-0" />;
-    }
-    if (lower.endsWith('.py')) {
-      // VS Code yellow/blue Python icon
+    // Python
+    if (lower.endsWith('.py') || lower.endsWith('.pyw') || lower.endsWith('.ipynb')) {
       return <FileTerminal size={14} style={{ color: '#3572a5' }} className="shrink-0" />;
     }
-    if (lower.endsWith('.json')) {
-      // VS Code yellow JSON brackets icon
+    // C3 language
+    if (lower.endsWith('.c3')) {
+      return <FileCode size={14} style={{ color: '#e44d26' }} className="shrink-0" />;
+    }
+    // C# / C-Sharp
+    if (lower.endsWith('.cs') || lower.endsWith('.csharp') || lower.endsWith('.csx')) {
+      return <FileCode size={14} style={{ color: '#178600' }} className="shrink-0" />;
+    }
+    // Typescript / TSX
+    if (lower.endsWith('.ts') || lower.endsWith('.tsx') || lower.endsWith('.cts') || lower.endsWith('.mts')) {
+      return <FileCode size={14} style={{ color: '#3178c6' }} className="shrink-0" />;
+    }
+    // Javascript / JSX
+    if (lower.endsWith('.js') || lower.endsWith('.jsx') || lower.endsWith('.mjs') || lower.endsWith('.cjs')) {
+      return <FileCode size={14} style={{ color: '#f1e05a' }} className="shrink-0" />;
+    }
+    // C / C++ / Headers
+    if (lower.endsWith('.cpp') || lower.endsWith('.cc') || lower.endsWith('.cxx') || lower.endsWith('.c') || lower.endsWith('.h') || lower.endsWith('.hpp') || lower.endsWith('.h++')) {
+      return <FileCode size={14} style={{ color: '#f34b7d' }} className="shrink-0" />;
+    }
+    // Markdown / Docs
+    if (lower.endsWith('.md') || lower.endsWith('.markdown') || lower.endsWith('.rst') || lower.endsWith('.adoc')) {
+      return <FileText size={14} style={{ color: '#083fa1' }} className="shrink-0" />;
+    }
+    // Web Layout / Style / SVG
+    if (lower.endsWith('.html') || lower.endsWith('.htm') || lower.endsWith('.xhtml') || lower.endsWith('.xml')) {
+      return <FileCode size={14} style={{ color: '#e34c26' }} className="shrink-0" />;
+    }
+    if (lower.endsWith('.svg')) {
+      return <Image size={14} style={{ color: '#ffb300' }} className="shrink-0" />;
+    }
+    if (lower.endsWith('.css') || lower.endsWith('.scss') || lower.endsWith('.sass') || lower.endsWith('.less') || lower.endsWith('.postcss')) {
+      return <FileCode size={14} style={{ color: '#563d7c' }} className="shrink-0" />;
+    }
+    // Shell scripts / terminal batch / PowerShell
+    if (lower.endsWith('.sh') || lower.endsWith('.bash') || lower.endsWith('.zsh') || lower.endsWith('.fish') || lower.endsWith('.bat') || lower.endsWith('.cmd') || lower.endsWith('.ps1')) {
+      return <FileTerminal size={14} style={{ color: '#49c31a' }} className="shrink-0" />;
+    }
+    // Go language
+    if (lower.endsWith('.go')) {
+      return <FileCode size={14} style={{ color: '#00add8' }} className="shrink-0" />;
+    }
+    // Rust language
+    if (lower.endsWith('.rs') || lower.endsWith('.rust')) {
+      return <FileCode size={14} style={{ color: '#dea584' }} className="shrink-0" />;
+    }
+    // Java
+    if (lower.endsWith('.java') || lower.endsWith('.class') || lower.endsWith('.jar')) {
+      return <FileCode size={14} style={{ color: '#b07219' }} className="shrink-0" />;
+    }
+    // Ruby
+    if (lower.endsWith('.rb') || lower.endsWith('.gem')) {
+      return <FileCode size={14} style={{ color: '#701516' }} className="shrink-0" />;
+    }
+    // PHP
+    if (lower.endsWith('.php') || lower.endsWith('.phtml')) {
+      return <FileCode size={14} style={{ color: '#4f5d95' }} className="shrink-0" />;
+    }
+    // Swift
+    if (lower.endsWith('.swift')) {
+      return <FileCode size={14} style={{ color: '#ffac45' }} className="shrink-0" />;
+    }
+    // Kotlin
+    if (lower.endsWith('.kt') || lower.endsWith('.kts')) {
+      return <FileCode size={14} style={{ color: '#f18e33' }} className="shrink-0" />;
+    }
+    // Databases
+    if (lower.endsWith('.sql') || lower.endsWith('.sqlite') || lower.endsWith('.db') || lower.endsWith('.db3') || lower.endsWith('.mdb')) {
+      return <Database size={14} style={{ color: '#4caf50' }} className="shrink-0" />;
+    }
+    // Images
+    if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.gif') || lower.endsWith('.webp') || lower.endsWith('.ico') || lower.endsWith('.bmp')) {
+      return <Image size={14} style={{ color: '#00bcd4' }} className="shrink-0" />;
+    }
+    // Binaries
+    if (lower.endsWith('.dll') || lower.endsWith('.exe') || lower.endsWith('.so') || lower.endsWith('.bin') || lower.endsWith('.dmg') || lower.endsWith('.app')) {
+      return <Binary size={14} style={{ color: '#9c27b0' }} className="shrink-0" />;
+    }
+    // JSON & Configs
+    if (lower.endsWith('.json') || lower.endsWith('.json5') || lower.endsWith('.toml') || lower.endsWith('.yaml') || lower.endsWith('.yml') || lower.endsWith('.ini') || lower.endsWith('.conf') || lower.endsWith('.config')) {
       return <FileJson size={14} style={{ color: '#cbcb41' }} className="shrink-0" />;
     }
-    if (lower.includes('.env')) {
-      // VS Code key-lock env icon
+    // Text documents
+    if (lower.endsWith('.txt') || lower.endsWith('.log') || lower.endsWith('.csv')) {
+      return <FileText size={14} style={{ color: '#90a4ae' }} className="shrink-0" />;
+    }
+    // Env
+    if (lower.includes('.env') || lower.endsWith('.key') || lower.endsWith('.pem') || lower.endsWith('.pub')) {
       return <FileKey size={14} style={{ color: '#e6b450' }} className="shrink-0" />;
     }
     // Generic script file icon
@@ -309,10 +428,21 @@ export default function FileExplorer({
       onContextMenu={handleEmptySpaceContextMenu}
       style={{
         backgroundColor: theme.sidebarBg,
-        borderColor: theme.borderColor
+        borderColor: theme.borderColor,
+        width: `${sidebarWidth}px`
       }}
-      className="w-full sm:w-56 h-full shrink-0 border-r flex flex-col justify-between font-mono relative bg-black/10 selection:bg-rose-500/10"
+      className="h-full shrink-0 border-r flex flex-col justify-between font-mono relative bg-black/10 selection:bg-rose-500/10"
     >
+      {/* Resizer Handle Bar */}
+      <div
+        onMouseDown={handleResizeMouseDown}
+        style={{
+          backgroundColor: isDragging ? '#ef4444' : undefined,
+          boxShadow: isDragging ? '0 0 10px #ef4444' : undefined,
+        }}
+        className={`absolute top-0 right-0 w-[5px] h-full cursor-col-resize hover:bg-[#ef4444]/60 active:bg-[#ef4444] transition-all duration-150 z-50 select-none`}
+        title="Drag left/right to resize sidebar"
+      />
       {/* Search & Actions Bar */}
       <div 
         style={{ borderColor: theme.borderColor }}
@@ -350,16 +480,7 @@ export default function FileExplorer({
         )}
       </div>
 
-      {/* Dynamic I/O Active badge */}
-      <div
-        style={{ borderColor: theme.borderColor }}
-        className="p-2.5 border-t bg-[#0d0e12]/60 text-left font-sans flex items-center space-x-2 pointer-events-none"
-      >
-        <Heart size={11} className="text-emerald-500 animate-pulse shrink-0 fill-current" />
-        <span className="text-[9px] font-mono tracking-wider text-zinc-500 uppercase">
-          Dynamic IO active
-        </span>
-      </div>
+
 
       {/* Context Menu for File Items */}
       {contextMenu && (
