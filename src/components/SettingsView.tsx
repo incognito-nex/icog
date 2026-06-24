@@ -28,8 +28,11 @@ export default function SettingsView({
   initialTab,
   onTriggerGitSync,
 }: SettingsProps) {
-  const [activeTab, setActiveTab] = useState<'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile' | 'experimental'>((initialTab as any) || 'editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile' | 'keybind' | 'experimental'>((initialTab as any) || 'editor');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [recordingField, setRecordingField] = useState<string | null>(null);
+
+  const tabContainerRef = React.useRef<HTMLDivElement>(null);
 
   const triggerToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -37,6 +40,69 @@ export default function SettingsView({
       setToast(null);
     }, 4000);
   };
+
+  const startRecording = (field: string) => {
+    setRecordingField(field);
+    triggerToast("Listening for keybind. Press your desired keys (e.g. Ctrl+Shift+K)...", "success");
+  };
+
+  const handleTabsWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (tabContainerRef.current) {
+      tabContainerRef.current.scrollLeft += e.deltaY;
+    }
+  };
+
+  React.useEffect(() => {
+    if (!recordingField) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) {
+        return;
+      }
+
+      const parts: string[] = [];
+      if (e.ctrlKey || e.metaKey) parts.push('Ctrl');
+      if (e.shiftKey) parts.push('Shift');
+      if (e.altKey) parts.push('Alt');
+
+      let keyName = e.key;
+      if (keyName === ' ') keyName = 'Space';
+      if (keyName.length === 1) {
+        keyName = keyName.toUpperCase();
+      } else {
+        keyName = keyName.charAt(0).toUpperCase() + keyName.slice(1);
+      }
+
+      parts.push(keyName);
+      const recordedString = parts.join('+');
+
+      setSettings(prev => {
+        const updated = {
+          ...prev,
+          keybinds: {
+            ...(prev.keybinds || {
+              toggleCommandPalette: 'Ctrl+P',
+              autoFixSyntax: 'Ctrl+Shift+F',
+              obfuscateScript: 'Ctrl+Shift+O',
+              deobfuscateScript: 'Ctrl+Shift+D'
+            }),
+            [recordingField]: recordedString
+          }
+        };
+        localStorage.setItem('incognito_settings', JSON.stringify(updated));
+        return updated;
+      });
+
+      triggerToast(`Keybind updated to ${recordedString}`, 'success');
+      setRecordingField(null);
+    };
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [recordingField]);
 
   const handleUpdate = <T extends keyof UserSettings>(section: T, field: keyof UserSettings[T], value: any) => {
     setSettings((prev) => {
@@ -104,10 +170,15 @@ export default function SettingsView({
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b overflow-x-auto shrink-0 select-none no-scrollbar" style={{ borderColor: theme.borderColor }}>
+      <div 
+        ref={tabContainerRef}
+        onWheel={handleTabsWheel}
+        className="flex border-b overflow-x-auto shrink-0 select-none no-scrollbar" 
+        style={{ borderColor: theme.borderColor }}
+      >
         {(settings.experimental?.terminalEnabled 
-          ? ['editor', 'terminal', 'gitsync', 'luau', 'appearance', 'profile', 'experimental'] 
-          : ['editor', 'gitsync', 'luau', 'appearance', 'profile', 'experimental']
+          ? ['editor', 'terminal', 'gitsync', 'luau', 'appearance', 'profile', 'keybind', 'experimental'] 
+          : ['editor', 'gitsync', 'luau', 'appearance', 'profile', 'keybind', 'experimental']
         ).map((tab) => {
           const tabLabels: Record<string, string> = {
             editor: 'Editor Dev',
@@ -116,6 +187,7 @@ export default function SettingsView({
             luau: 'Lua/u syntax',
             appearance: 'Skin/Themes',
             profile: 'Profile',
+            keybind: 'Keybinds',
             experimental: 'Experimental'
           };
           return (
@@ -708,8 +780,8 @@ export default function SettingsView({
               })}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-4 border-t" style={{ borderColor: theme.borderColor }}>
-              <div className="space-y-1.5 text-left">
+            <div className="pt-4 border-t text-left" style={{ borderColor: theme.borderColor }}>
+              <div className="space-y-1.5 max-w-sm text-left">
                 <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Glossy blur effect</label>
                 <select
                   value={settings.appearance.blurIntensity}
@@ -720,19 +792,6 @@ export default function SettingsView({
                   <option value="low">Subtle Glassmorphism (Low)</option>
                   <option value="medium">Medium frosting</option>
                   <option value="high">Epic Frosted Screen (High)</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Entry Transition Speed</label>
-                <select
-                  value={settings.appearance.animationsSpeed}
-                  onChange={(e) => handleUpdate('appearance', 'animationsSpeed', e.target.value)}
-                  className={`w-full border rounded-xl py-2.5 px-3 text-xs font-mono focus:outline-none ${inputBg}`}
-                >
-                  <option value="slow">Cinema Slow (400ms)</option>
-                  <option value="normal">Standard Dev (200ms)</option>
-                  <option value="fast">Zero Lag Snappy (50ms)</option>
                 </select>
               </div>
             </div>
@@ -804,6 +863,116 @@ export default function SettingsView({
                   className={`w-full border rounded-xl py-2 px-3 text-xs font-mono focus:outline-none ${inputBg}`}
                 />
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 7: KEYBINDS */}
+        {activeTab === 'keybind' && (
+          <div className="space-y-6">
+            <div className="flex items-center space-x-2 border-b pb-3" style={{ borderColor: theme.borderColor }}>
+              <Sliders size={15} style={{ color: theme.accent }} />
+              <h3 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
+                Keyboard Shortcut Settings
+              </h3>
+            </div>
+
+            <p className="text-xs text-zinc-400 font-mono leading-relaxed">
+              Customize hotkeys to invoke the command palette and run code-transform functions instantly inside the editor workspace. Click a field to record a new keybind.
+            </p>
+
+            <div className="space-y-4 pt-2">
+              {[
+                {
+                  id: 'toggleCommandPalette',
+                  label: 'Toggle Command Palette',
+                  desc: 'Opens/closes the universal command menu and file workspace locator',
+                  default: 'Ctrl+P'
+                },
+                {
+                  id: 'autoFixSyntax',
+                  label: 'Auto-Fix Luau Syntax',
+                  desc: 'Corrects unclosed tags, strings, brackets, and block endings in active script',
+                  default: 'Ctrl+Shift+F'
+                },
+                {
+                  id: 'obfuscateScript',
+                  label: 'Obfuscate Active Script',
+                  desc: 'Applies control flow flattening and XOR AST protections to script',
+                  default: 'Ctrl+Shift+O'
+                },
+                {
+                  id: 'deobfuscateScript',
+                  label: 'Deobfuscate Active Script',
+                  desc: 'Extracts VM bytecode and restores the closest original Lua representation',
+                  default: 'Ctrl+Shift+D'
+                }
+              ].map((item) => {
+                const currentBinds = settings.keybinds || {
+                  toggleCommandPalette: 'Ctrl+P',
+                  autoFixSyntax: 'Ctrl+Shift+F',
+                  obfuscateScript: 'Ctrl+Shift+O',
+                  deobfuscateScript: 'Ctrl+Shift+D'
+                };
+                const value = currentBinds[item.id as keyof typeof currentBinds] || item.default;
+                const isRecording = recordingField === item.id;
+
+                return (
+                  <div 
+                    key={item.id} 
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border gap-4"
+                    style={{ borderColor: theme.borderColor }}
+                  >
+                    <div className="text-left space-y-0.5">
+                      <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>
+                        {item.label}
+                      </span>
+                      <span className="text-[9px] block leading-relaxed" style={{ color: theme.textMuted }}>
+                        {item.desc}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <button
+                        onClick={() => startRecording(item.id)}
+                        style={{
+                          borderColor: isRecording ? theme.accent : theme.borderColor,
+                          backgroundColor: isRecording ? `${theme.accent}15` : 'transparent',
+                          color: isRecording ? theme.accent : theme.textMain
+                        }}
+                        className={`px-3.5 py-2 text-xs font-mono font-bold uppercase tracking-wider rounded-xl border hover:opacity-90 transition active:scale-95 cursor-pointer flex items-center space-x-2 min-w-[120px] justify-center ${
+                          isRecording ? 'animate-pulse' : ''
+                        }`}
+                      >
+                        <span>{isRecording ? 'Press Keys...' : value}</span>
+                      </button>
+
+                      {!isRecording && (
+                        <button
+                          onClick={() => {
+                            setSettings(prev => {
+                              const updated = {
+                                ...prev,
+                                keybinds: {
+                                  ...(prev.keybinds || {}),
+                                  [item.id]: item.default
+                                }
+                              };
+                              localStorage.setItem('incognito_settings', JSON.stringify(updated));
+                              return updated;
+                            });
+                            triggerToast(`Reset ${item.label} to default`, 'success');
+                          }}
+                          className="px-2 py-2 text-[10px] font-mono text-zinc-500 hover:text-zinc-300 transition"
+                          title="Reset to default"
+                        >
+                          Reset
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

@@ -766,6 +766,12 @@ print("ESP script loaded!")`;
         bio: 'Development environment active.',
         badge: 'Lead Architect',
       },
+      keybinds: {
+        toggleCommandPalette: 'Ctrl+P',
+        autoFixSyntax: 'Ctrl+Shift+F',
+        obfuscateScript: 'Ctrl+Shift+O',
+        deobfuscateScript: 'Ctrl+Shift+D',
+      },
       experimental: {
         terminalEnabled: false,
       },
@@ -797,6 +803,10 @@ print("ESP script loaded!")`;
             ...parsed.account,
             username: parsed.account?.username || defaults.account.username,
             avatarUrl: loadedAvatar
+          },
+          keybinds: {
+            ...defaults.keybinds,
+            ...(parsed.keybinds || {})
           },
           experimental: { ...defaults.experimental, ...parsed.experimental },
         };
@@ -852,17 +862,75 @@ print("ESP script loaded!")`;
     localStorage.setItem('incognito_settings', JSON.stringify(settings));
   }, [settings]);
 
-  // Command palette hotkey (Ctrl + P)
+// Helper to match dynamic keybind strings
+function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
+  if (!keybindStr) return false;
+  const parts = keybindStr.toLowerCase().split('+');
+  const needsCtrl = parts.includes('ctrl') || parts.includes('control');
+  const needsShift = parts.includes('shift');
+  const needsAlt = parts.includes('alt');
+  const needsMeta = parts.includes('meta') || parts.includes('cmd');
+  
+  const keyPart = parts.find(p => !['ctrl', 'control', 'shift', 'alt', 'meta', 'cmd'].includes(p));
+  if (!keyPart) return false;
+  
+  const hasCtrl = e.ctrlKey || e.metaKey;
+  const hasShift = e.shiftKey;
+  const hasAlt = e.altKey;
+  const hasMeta = e.metaKey;
+  
+  if (needsCtrl && !hasCtrl) return false;
+  if (needsShift && !hasShift) return false;
+  if (needsAlt && !hasAlt) return false;
+  if (needsMeta && !hasMeta) return false;
+  
+  const eventKey = e.key.toLowerCase();
+  if (eventKey === keyPart) return true;
+  
+  if (keyPart === 'space' && eventKey === ' ') return true;
+  if (keyPart === 'enter' && eventKey === 'enter') return true;
+  
+  return false;
+}
+
+  // Dynamic Keybind registration and execution
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+      const activeKeybinds = settings.keybinds || {
+        toggleCommandPalette: 'Ctrl+P',
+        autoFixSyntax: 'Ctrl+Shift+F',
+        obfuscateScript: 'Ctrl+Shift+O',
+        deobfuscateScript: 'Ctrl+Shift+D'
+      };
+
+      const target = e.target as HTMLElement;
+      const isInputFocused = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+
+      if (matchesKeybind(e, activeKeybinds.toggleCommandPalette)) {
         e.preventDefault();
         setIsPaletteOpen(prev => !prev);
+        return;
+      }
+
+      if (isInputFocused && target.tagName === 'INPUT') {
+        return;
+      }
+
+      if (matchesKeybind(e, activeKeybinds.autoFixSyntax)) {
+        e.preventDefault();
+        handleAutoFixSyntax();
+      } else if (matchesKeybind(e, activeKeybinds.obfuscateScript)) {
+        e.preventDefault();
+        handleObfuscateCurrentFile();
+      } else if (matchesKeybind(e, activeKeybinds.deobfuscateScript)) {
+        e.preventDefault();
+        handleDeobfuscateCurrentFile();
       }
     };
+
     window.addEventListener('keydown', handleKeydown);
     return () => window.removeEventListener('keydown', handleKeydown);
-  }, []);
+  }, [settings.keybinds, activeFileId, files]);
 
   // Toast Notification dispatcher helper (adds to terminal)
   const addTerminalLine = (text: string, type: 'info' | 'success' | 'warning' | 'error' | 'input' = 'info') => {
@@ -1149,7 +1217,7 @@ print("ESP script loaded!")`;
       id: 'cmd-autofix',
       category: 'Actions' as const,
       name: 'Auto-Fix-Syntax (Intelligently resolve unmatched symbols, blocks, and strings with 100% precision)',
-      shortcut: 'Ctrl+Shift+F',
+      shortcut: settings.keybinds?.autoFixSyntax || 'Ctrl+Shift+F',
       icon: <Wand2 size={14} />,
       action: () => handleAutoFixSyntax(),
     },
@@ -1157,7 +1225,7 @@ print("ESP script loaded!")`;
       id: 'cmd-obfuscate',
       category: 'Actions' as const,
       name: 'Obfuscate (Trigger high-security localized Python VM obfuscation compiler)',
-      shortcut: 'Ctrl+Shift+O',
+      shortcut: settings.keybinds?.obfuscateScript || 'Ctrl+Shift+O',
       icon: <Lock size={14} />,
       action: () => handleObfuscateCurrentFile(),
     },
@@ -1165,7 +1233,7 @@ print("ESP script loaded!")`;
       id: 'cmd-deobfuscate',
       category: 'Actions' as const,
       name: 'Deobfuscate (Extract VM bytecode, decode string matrices, and restore original code source)',
-      shortcut: 'Ctrl+Shift+D',
+      shortcut: settings.keybinds?.deobfuscateScript || 'Ctrl+Shift+D',
       icon: <Unlock size={14} />,
       action: () => handleDeobfuscateCurrentFile(),
     }

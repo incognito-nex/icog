@@ -115,6 +115,12 @@ export interface UserSettings {
     bio: string;
     badge: string;
   };
+  keybinds?: {
+    toggleCommandPalette: string;
+    autoFixSyntax: string;
+    obfuscateScript: string;
+    deobfuscateScript: string;
+  };
   experimental?: {
     terminalEnabled: boolean;
   };
