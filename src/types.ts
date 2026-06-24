@@ -105,6 +105,8 @@ export interface UserSettings {
     themeId: string;
     blurIntensity: 'none' | 'low' | 'medium' | 'high';
     animationsSpeed: 'slow' | 'normal' | 'fast';
+    cardColorMode?: 'colorful' | 'synced';
+    animationsEnabled?: boolean;
   };
   syntax: {
     engineId: string; // Active syntax ID e.g. 'studio-classic', 'roblox-luau', etc.
@@ -123,5 +125,6 @@ export interface UserSettings {
   };
   experimental?: {
     terminalEnabled: boolean;
+    multiAccountInjection?: boolean;
   };
 }

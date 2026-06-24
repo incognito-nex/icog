@@ -15,6 +15,7 @@ interface SettingsProps {
   theme: AppTheme;
   initialTab?: 'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile' | 'experimental';
   onTriggerGitSync?: () => void;
+  triggerToast?: (message: string, type?: any) => void;
 }
 
 export default function SettingsView({
@@ -27,6 +28,7 @@ export default function SettingsView({
   theme,
   initialTab,
   onTriggerGitSync,
+  triggerToast: propsTriggerToast,
 }: SettingsProps) {
   const [activeTab, setActiveTab] = useState<'editor' | 'terminal' | 'gitsync' | 'luau' | 'appearance' | 'profile' | 'keybind' | 'experimental'>((initialTab as any) || 'editor');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -34,11 +36,15 @@ export default function SettingsView({
 
   const tabContainerRef = React.useRef<HTMLDivElement>(null);
 
-  const triggerToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => {
-      setToast(null);
-    }, 4000);
+  const triggerToast = (message: string, type: any = 'success') => {
+    if (propsTriggerToast) {
+      propsTriggerToast(message, type);
+    } else {
+      setToast({ message, type: type === 'error' ? 'error' : 'success' });
+      setTimeout(() => {
+        setToast(null);
+      }, 4000);
+    }
   };
 
   const startRecording = (field: string) => {
@@ -161,10 +167,10 @@ export default function SettingsView({
         <div>
           <h1 className="text-xl font-extrabold tracking-tight uppercase flex items-center space-x-2" style={{ color: theme.textMain }}>
             <Settings2 className="w-5 h-5" style={{ color: theme.accent }} />
-            <span>Workspace Control Panel</span>
+            <span>Settings</span>
           </h1>
           <p className="text-xs mt-1 font-medium" style={{ color: theme.textMuted }}>
-            Configure compilers, responsive views, diagnostic metrics, and local sandbox configurations.
+            Manage your editor, hotkeys, theme and advanced preferences.
           </p>
         </div>
       </div>
@@ -181,14 +187,14 @@ export default function SettingsView({
           : ['editor', 'gitsync', 'luau', 'appearance', 'profile', 'keybind', 'experimental']
         ).map((tab) => {
           const tabLabels: Record<string, string> = {
-            editor: 'Editor Dev',
-            terminal: 'Terminal Settings',
-            gitsync: 'Git Sync',
-            luau: 'Lua/u syntax',
-            appearance: 'Skin/Themes',
+            editor: 'Editor',
+            terminal: 'Terminal',
+            gitsync: 'Git Backup',
+            luau: 'Luau Config',
+            appearance: 'Themes',
             profile: 'Profile',
-            keybind: 'Keybinds',
-            experimental: 'Experimental'
+            keybind: 'Hotkeys',
+            experimental: 'Advanced'
           };
           return (
             <button
@@ -220,13 +226,13 @@ export default function SettingsView({
             <div className="flex items-center space-x-2 border-b pb-3" style={{ borderColor: theme.borderColor }}>
               <Sliders size={15} style={{ color: theme.accent }} />
               <h3 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
-                Incognito Editor Preferences
+                Editor Settings
               </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Font Sizing (px)</label>
+                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Font Size</label>
                 <input
                   type="number"
                   min="10"
@@ -238,7 +244,7 @@ export default function SettingsView({
               </div>
 
               <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Font Typography</label>
+                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Font Family</label>
                 <select
                   value={settings.editor.fontFamily}
                   onChange={(e) => handleUpdate('editor', 'fontFamily', e.target.value)}
@@ -263,7 +269,7 @@ export default function SettingsView({
               </div>
 
               <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Cursor Blinking Model</label>
+                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Cursor Blinking</label>
                 <select
                   value={settings.editor.cursorBlinking}
                   onChange={(e) => handleUpdate('editor', 'cursorBlinking', e.target.value)}
@@ -277,7 +283,7 @@ export default function SettingsView({
               </div>
 
               <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Cursor Style Design</label>
+                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Cursor Style</label>
                 <select
                   value={settings.editor.cursorStyle}
                   onChange={(e) => handleUpdate('editor', 'cursorStyle', e.target.value)}
@@ -323,8 +329,8 @@ export default function SettingsView({
                   )}
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Gutter Minimap Map</span>
-                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Enable floating mini overview</span>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Minimap</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Show code overview minimap</span>
                 </div>
               </label>
 
@@ -347,8 +353,8 @@ export default function SettingsView({
                   )}
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Synchronous Auto-Save</span>
-                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Saves files instantly on type</span>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Auto-Save</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Save files automatically on change</span>
                 </div>
               </label>
 
@@ -371,8 +377,8 @@ export default function SettingsView({
                   )}
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Show Line Numbers</span>
-                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Render gutter indexes on left</span>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Line Numbers</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Show line numbers on the left</span>
                 </div>
               </label>
 
@@ -395,8 +401,8 @@ export default function SettingsView({
                   )}
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Smooth Caret Animation</span>
-                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Animates typing caret fluidly</span>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Smooth Caret</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Smooth cursor typing transition</span>
                 </div>
               </label>
 
@@ -419,8 +425,8 @@ export default function SettingsView({
                   )}
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Bracket Autoclose</span>
-                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Auto close parentheses, quotes & braces</span>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Autoclose Brackets</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Auto-close brackets and quotes</span>
                 </div>
               </label>
             </div>
@@ -433,13 +439,13 @@ export default function SettingsView({
             <div className="flex items-center space-x-2 border-b pb-3" style={{ borderColor: theme.borderColor }}>
               <Terminal size={15} style={{ color: theme.accent }} />
               <h3 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
-                Terminal Console Configuration
+                Terminal Settings
               </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Simulation Compiler Delay</label>
+                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Execution Delay</label>
                 <div className="flex items-center space-x-2">
                   <input
                     type="range"
@@ -456,21 +462,21 @@ export default function SettingsView({
               </div>
 
               <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Console Size Limit (Lines)</label>
+                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Line Limit</label>
                 <select
                   value={settings.terminal.bufferLimit}
                   onChange={(e) => handleUpdate('terminal', 'bufferLimit', parseInt(e.target.value))}
                   className={`w-full border rounded-xl py-2.5 px-3 text-xs font-mono focus:outline-none ${inputBg}`}
                 >
-                  <option value="50">50 Lines limit</option>
-                  <option value="100">100 Lines limit</option>
-                  <option value="200">200 Lines limit</option>
-                  <option value="500">Unbounded scroll</option>
+                  <option value="50">50 Lines</option>
+                  <option value="100">100 Lines</option>
+                  <option value="200">200 Lines</option>
+                  <option value="500">Unbounded</option>
                 </select>
               </div>
 
               <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Font Scale zoom</label>
+                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Font Size Scale</label>
                 <select
                   value={settings.terminal.fontScale.toString()}
                   onChange={(e) => handleUpdate('terminal', 'fontScale', parseFloat(e.target.value))}
@@ -504,8 +510,8 @@ export default function SettingsView({
                   )}
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Auto-Clear on Execution</span>
-                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Wipes historical logs when a script executes</span>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Auto-Clear Log</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Clear terminal when executing a script</span>
                 </div>
               </label>
 
@@ -528,8 +534,8 @@ export default function SettingsView({
                   )}
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Enable Timestamp Prefixes</span>
-                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Displays date & elapsed run times of logs</span>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Timestamps</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Show timestamps next to logs</span>
                 </div>
               </label>
 
@@ -552,8 +558,8 @@ export default function SettingsView({
                   )}
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Audio Bell System</span>
-                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Produces diagnostic beeps on execution errors</span>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Error Bell</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Play alert sound on script error</span>
                 </div>
               </label>
             </div>
@@ -566,14 +572,14 @@ export default function SettingsView({
             <div className="flex items-center space-x-2 border-b pb-3" style={{ borderColor: theme.borderColor }}>
               <Github size={15} style={{ color: theme.accent }} />
               <h3 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
-                GitHub Core Sync Configuration
+                GitHub Sync
               </h3>
             </div>
 
             <div className="bg-neutral-900/35 border border-zinc-900 rounded-xl p-4 flex items-start space-x-3">
               <Code size={16} className="text-zinc-500 shrink-0 mt-0.5" />
               <p className="text-[10px] text-zinc-400 font-mono leading-relaxed uppercase">
-                Active source branches sync with standard GitHub web endpoints. Enabling sync triggers direct terminal cache push lines whenever changes are saved or manual sweep is fired.
+                Sync your scripts directory with a remote GitHub repository.
               </p>
             </div>
 
@@ -660,8 +666,8 @@ export default function SettingsView({
 
               <div className="pt-4 flex items-center justify-between border-t" style={{ borderColor: theme.borderColor }}>
                 <div className="text-left">
-                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Manual Synchronization Sweep</span>
-                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Compile memory workspace and force sync commit-push references immediately</span>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Sync Now</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Manually push scripts to repository</span>
                 </div>
                 <button
                   type="button"
@@ -669,7 +675,7 @@ export default function SettingsView({
                   style={{ backgroundColor: `${theme.accent}1c`, color: theme.accent, borderColor: `${theme.accent}33` }}
                   className="px-4 py-1.5 border rounded-xl font-mono text-[10px] font-bold uppercase tracking-wider hover:opacity-90 active:scale-95 transition cursor-pointer"
                 >
-                  Sync & Push Now
+                  Sync Now
                 </button>
               </div>
             </div>
@@ -683,7 +689,7 @@ export default function SettingsView({
                <div className="flex items-center space-x-2">
                 <Cpu size={15} style={{ color: theme.accent }} />
                 <h3 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
-                  Lua/u syntax Highlighter
+                  Luau Syntax Settings
                 </h3>
               </div>
             </div>
@@ -714,8 +720,8 @@ export default function SettingsView({
                       )}
                     </div>
                     
-                    <p className="text-[9px] text-zinc-550 mt-1 uppercase leading-relaxed">
-                      Theme mappings: {syn.keywords.length} keywords, {syn.functions.length} functions registered.
+                    <p className="text-[9px] text-zinc-555 mt-1 uppercase leading-relaxed">
+                      Choose your active syntax engine preset.
                     </p>
 
                     <div className="mt-3 flex items-center space-x-1.5">
@@ -737,7 +743,7 @@ export default function SettingsView({
             <div className="flex items-center space-x-2 border-b pb-3" style={{ borderColor: theme.borderColor }}>
               <Paintbrush size={15} style={{ color: theme.accent }} />
               <h3 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
-                Appearance Studio Skins
+                Themes
               </h3>
             </div>
 
@@ -767,7 +773,7 @@ export default function SettingsView({
                         )}
                       </div>
                       <span className="text-[9px] block mt-1" style={{ color: theme.textMuted }}>
-                        Accent hex mapping: {t.accent}
+                        Accent color: {t.accent}
                       </span>
                     </div>
 
@@ -781,18 +787,44 @@ export default function SettingsView({
             </div>
 
             <div className="pt-4 border-t text-left" style={{ borderColor: theme.borderColor }}>
-              <div className="space-y-1.5 max-w-sm text-left">
-                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Glossy blur effect</label>
-                <select
-                  value={settings.appearance.blurIntensity}
-                  onChange={(e) => handleUpdate('appearance', 'blurIntensity', e.target.value)}
-                  className={`w-full border rounded-xl py-2.5 px-3 text-xs font-mono focus:outline-none ${inputBg}`}
-                >
-                  <option value="none">Flat Solids (Unblurred)</option>
-                  <option value="low">Subtle Glassmorphism (Low)</option>
-                  <option value="medium">Medium frosting</option>
-                  <option value="high">Epic Frosted Screen (High)</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Interface Blur</label>
+                  <select
+                    value={settings.appearance.blurIntensity}
+                    onChange={(e) => handleUpdate('appearance', 'blurIntensity', e.target.value)}
+                    className={`w-full border rounded-xl py-2.5 px-3 text-xs font-mono focus:outline-none ${inputBg}`}
+                  >
+                    <option value="none">Disabled</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Card Themes</label>
+                  <select
+                    value={settings.appearance.cardColorMode || 'colorful'}
+                    onChange={(e) => handleUpdate('appearance', 'cardColorMode', e.target.value)}
+                    className={`w-full border rounded-xl py-2.5 px-3 text-xs font-mono focus:outline-none ${inputBg}`}
+                  >
+                    <option value="colorful">Default</option>
+                    <option value="synced">Synced to Theme</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Animations</label>
+                  <select
+                    value={settings.appearance.animationsEnabled !== false ? 'on' : 'off'}
+                    onChange={(e) => handleUpdate('appearance', 'animationsEnabled', e.target.value === 'on')}
+                    className={`w-full border rounded-xl py-2.5 px-3 text-xs font-mono focus:outline-none ${inputBg}`}
+                  >
+                    <option value="on">Enabled</option>
+                    <option value="off">Disabled</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
@@ -804,7 +836,7 @@ export default function SettingsView({
             <div className="flex items-center space-x-2 border-b pb-3" style={{ borderColor: theme.borderColor }}>
               <User size={15} style={{ color: theme.accent }} />
               <h3 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
-                Developer Identity Configuration
+                Developer Profile
               </h3>
             </div>
 
@@ -818,7 +850,7 @@ export default function SettingsView({
               </div>
 
               <div className="space-y-1.5 flex-1 text-center sm:text-left">
-                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Avatar Picture URL</label>
+                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Avatar URL</label>
                 <input
                   type="text"
                   value={settings.account.avatarUrl}
@@ -831,7 +863,7 @@ export default function SettingsView({
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Architect Name</label>
+                  <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Name</label>
                   <input
                     type="text"
                     value={settings.account.username}
@@ -844,7 +876,7 @@ export default function SettingsView({
                 </div>
 
                 <div className="space-y-1.5 text-left">
-                  <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Developer Title / Role</label>
+                  <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Title</label>
                   <input
                     type="text"
                     value={settings.account.badge}
@@ -855,7 +887,7 @@ export default function SettingsView({
               </div>
 
               <div className="space-y-1.5 text-left">
-                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Biographical Summary</label>
+                <label className="text-[10px] font-mono uppercase tracking-widest block font-bold" style={{ color: theme.textMuted }}>Bio</label>
                 <textarea
                   rows={2}
                   value={settings.account.bio}
@@ -873,12 +905,12 @@ export default function SettingsView({
             <div className="flex items-center space-x-2 border-b pb-3" style={{ borderColor: theme.borderColor }}>
               <Sliders size={15} style={{ color: theme.accent }} />
               <h3 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
-                Keyboard Shortcut Settings
+                Keybinds
               </h3>
             </div>
 
             <p className="text-xs text-zinc-400 font-mono leading-relaxed">
-              Customize hotkeys to invoke the command palette and run code-transform functions instantly inside the editor workspace. Click a field to record a new keybind.
+              Customize hotkeys for shortcuts. Click a shortcut to rebind.
             </p>
 
             <div className="space-y-4 pt-2">
@@ -982,15 +1014,15 @@ export default function SettingsView({
             <div className="flex items-center space-x-2 border-b pb-3" style={{ borderColor: theme.borderColor }}>
               <Sparkles size={15} style={{ color: theme.accent }} />
               <h3 className="text-xs font-bold font-mono tracking-wider uppercase" style={{ color: theme.textMain }}>
-                Experimental Sandbox Features
+                Advanced Options
               </h3>
             </div>
 
             <p className="text-xs text-zinc-400 font-mono leading-relaxed">
-              These are developer features that can be toggled safely. Toggling these features will update active view structures in real-time.
+              Toggle optional interface panels.
             </p>
 
-            <div className="grid grid-cols-1 gap-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <label className="flex items-center space-x-3 cursor-pointer border p-4 rounded-xl transition duration-150" 
                      style={{ 
                        borderColor: settings.experimental?.terminalEnabled ? theme.accent : theme.borderColor,
@@ -1011,6 +1043,7 @@ export default function SettingsView({
                       localStorage.setItem('incognito_settings', JSON.stringify(updated));
                       return updated;
                     });
+                    triggerToast(`Terminal console ${e.target.checked ? 'enabled' : 'disabled'}`, 'success');
                   }}
                   className="sr-only"
                 />
@@ -1026,8 +1059,49 @@ export default function SettingsView({
                   )}
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Enable Terminal Console</span>
-                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Enables the compiler console & standard terminal input/output pane</span>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Terminal Panel</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Show integrated terminal bottom panel</span>
+                </div>
+              </label>
+
+              <label className="flex items-center space-x-3 cursor-pointer border p-4 rounded-xl transition duration-150" 
+                     style={{ 
+                       borderColor: settings.experimental?.multiAccountInjection ? theme.accent : theme.borderColor,
+                       backgroundColor: settings.experimental?.multiAccountInjection ? `${theme.accent}0d` : 'transparent'
+                     }}>
+                <input
+                  type="checkbox"
+                  checked={!!settings.experimental?.multiAccountInjection}
+                  onChange={(e) => {
+                    setSettings((prev) => {
+                      const updated = {
+                        ...prev,
+                        experimental: {
+                          ...prev.experimental,
+                          multiAccountInjection: e.target.checked
+                        }
+                      };
+                      localStorage.setItem('incognito_settings', JSON.stringify(updated));
+                      return updated;
+                    });
+                    triggerToast(`Multi-Account tab ${e.target.checked ? 'enabled' : 'disabled'}`, 'success');
+                  }}
+                  className="sr-only"
+                />
+                <div 
+                  style={{
+                    borderColor: !!settings.experimental?.multiAccountInjection ? theme.accent : theme.borderColor,
+                    backgroundColor: !!settings.experimental?.multiAccountInjection ? theme.accent : 'transparent'
+                  }}
+                  className="w-4 h-4 rounded border flex items-center justify-center transition shrink-0"
+                >
+                  {!!settings.experimental?.multiAccountInjection && (
+                    <Check size={10} strokeWidth={3} style={{ color: theme.isLight ? '#ffffff' : '#000000' }} />
+                  )}
+                </div>
+                <div>
+                  <span className="text-[11px] font-bold font-mono block" style={{ color: theme.textMain }}>Multi-Account</span>
+                  <span className="text-[9px] block text-left" style={{ color: theme.textMuted }}>Enable Multi-Account injector view</span>
                 </div>
               </label>
             </div>

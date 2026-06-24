@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, MotionConfig } from 'motion/react';
 import { 
   Terminal, ShieldAlert, BadgeCheck, FileText, Plus, Radio,
   FolderOpen, Compass, Search, Calendar, ChevronDown, ChevronUp, User, 
@@ -22,6 +22,7 @@ import TerminalPanel from './components/TerminalPanel';
 import ScriptsView from './components/ScriptsView';
 import SettingsView from './components/SettingsView';
 import AboutView from './components/AboutView';
+import MultiAccountView from './components/MultiAccountView';
 
 export default function App() {
   const [showLoading, setShowLoading] = useState(true);
@@ -37,6 +38,14 @@ export default function App() {
 
   // Command Palette
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+
+  // Global Floating Toasts Stack
+  interface ToastItem {
+    id: string;
+    message: string;
+    type: 'clear' | 'inject' | 'execute' | 'success' | 'info';
+  }
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   // States with Local Storage caching
   const [files, setFiles] = useState<FileNode[]>(() => {
@@ -756,6 +765,7 @@ print("ESP script loaded!")`;
         themeId: 'grey-matte',
         blurIntensity: 'none',
         animationsSpeed: 'normal',
+        cardColorMode: 'colorful',
       },
       syntax: {
         engineId: 'rbx-luau',
@@ -774,6 +784,7 @@ print("ESP script loaded!")`;
       },
       experimental: {
         terminalEnabled: false,
+        multiAccountInjection: false,
       },
     };
 
@@ -943,6 +954,23 @@ function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
     setTerminalLines(prev => [...prev, newLine]);
   };
 
+  const triggerToast = (message: string, type: 'clear' | 'inject' | 'execute' | 'success' | 'info' = 'success') => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts(prev => [...prev, { id, message, type }]);
+    
+    // Auto-remove toast after 1.5 seconds
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 1500);
+
+    let termType: 'info' | 'success' | 'warning' | 'error' = 'info';
+    if (type === 'clear') termType = 'error';
+    else if (type === 'inject') termType = 'success';
+    else if (type === 'execute') termType = 'info';
+    else if (type === 'success') termType = 'success';
+    addTerminalLine(message, termType);
+  };
+
   // Virtual File Operations
   const handleOpenFile = (fileId: string) => {
     setActiveFileId(fileId);
@@ -1072,6 +1100,7 @@ function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
 
     addTerminalLine(`$ exec luau -arch=gt3 -file="${target.name}"`, 'input');
     addTerminalLine(`Compiling dynamic execution graph: ${target.name}...`, 'info');
+    triggerToast(`Script Executed: ${target.name}`, 'execute');
 
     // Parse simple patterns to mock real outputs
     setTimeout(() => {
@@ -1123,6 +1152,7 @@ function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
 
     setTimeout(() => {
       addTerminalLine(`Injection completed. Incognito API hooks initialized successfully.`, 'success');
+      triggerToast('Client injected successfully', 'inject');
     }, 550);
   };
 
@@ -1310,13 +1340,14 @@ function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
   }
 
   return (
-    <div
-      style={{
-        backgroundColor: currentTheme.bodyBg,
-        color: currentTheme.textMain,
-      }}
-      className={`h-screen w-screen flex flex-col font-sans select-none overflow-hidden text-left relative ${currentTheme.background}`}
-    >
+    <MotionConfig reducedMotion={settings.appearance.animationsEnabled === false ? "always" : "user"}>
+      <div
+        style={{
+          backgroundColor: currentTheme.bodyBg,
+          color: currentTheme.textMain,
+        }}
+        className={`h-screen w-screen flex flex-col font-sans select-none overflow-hidden text-left relative ${currentTheme.background} ${settings.appearance.animationsEnabled === false ? '[&_*]:!transition-none [&_*]:!duration-0 [&_*]:!animation-none' : ''}`}
+      >
       <AnimatePresence>
         {showLoading && (
           <LoadingScreen onComplete={() => setShowLoading(false)} />
@@ -1374,7 +1405,10 @@ function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
                       onRunScript={handleRunScript}
                       onSaveFile={handleSaveFile}
                       onInjectScript={handleInjectScript}
-                      onClearTerminal={() => setTerminalLines([])}
+                      onClearTerminal={() => {
+                        setTerminalLines([]);
+                        triggerToast('Terminal console cleared', 'clear');
+                      }}
                     />
 
                     {/* Integrated dynamic height resizable Terminal Console panel */}
@@ -1382,7 +1416,10 @@ function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
                       <TerminalPanel
                         lines={terminalLines}
                         onSendCommand={handleSendTerminal}
-                        onClear={() => setTerminalLines([])}
+                        onClear={() => {
+                          setTerminalLines([]);
+                          triggerToast('Terminal console cleared', 'clear');
+                        }}
                         terminalHeight={terminalHeight}
                         setTerminalHeight={setTerminalHeight}
                         theme={currentTheme}
@@ -1453,6 +1490,23 @@ function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
                       </motion.div>
                     )}
 
+                    {activeSection === 'multiaccount' && (
+                      <motion.div
+                        key="multiaccount"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.18 }}
+                        className="flex-1 flex flex-col min-h-0 overflow-y-auto"
+                      >
+                        <MultiAccountView
+                          theme={currentTheme}
+                          settings={settings}
+                          triggerToast={triggerToast}
+                        />
+                      </motion.div>
+                    )}
+
                     {activeSection === 'themes' && (
                       <motion.div
                         key="themes"
@@ -1472,6 +1526,7 @@ function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
                           theme={currentTheme}
                           initialTab="appearance"
                           onTriggerGitSync={handleGitPush}
+                          triggerToast={triggerToast}
                         />
                       </motion.div>
                     )}
@@ -1495,6 +1550,7 @@ function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
                           theme={currentTheme}
                           initialTab="editor"
                           onTriggerGitSync={handleGitPush}
+                          triggerToast={triggerToast}
                         />
                       </motion.div>
                     )}
@@ -1618,6 +1674,44 @@ function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
             )}
           </AnimatePresence>
 
+          {/* Floating Notification Toasts Stack */}
+          <div className="fixed bottom-6 right-6 flex flex-col space-y-2 z-50 pointer-events-none items-end max-w-sm w-full">
+            <AnimatePresence>
+              {toasts.map((t) => (
+                <motion.div
+                  key={t.id}
+                  layout
+                  initial={{ opacity: 0, y: 15, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: 15, transition: { duration: 0.15 } }}
+                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                  className="pointer-events-auto flex items-center space-x-3 px-4 py-2.5 rounded-xl border shadow-xl backdrop-blur-md font-mono text-[11px] font-bold uppercase tracking-wider"
+                  style={{
+                    backgroundColor: currentTheme.cardBg,
+                    borderColor: currentTheme.borderColor,
+                    color: currentTheme.textMain,
+                    boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  <span 
+                    className="w-2.5 h-2.5 rounded-full inline-block animate-pulse shrink-0"
+                    style={{
+                      backgroundColor: 
+                        t.type === 'clear' 
+                          ? '#ef4444' 
+                          : t.type === 'inject' 
+                            ? '#10b981' 
+                            : t.type === 'execute' 
+                              ? (currentTheme.isLight ? '#000000' : '#ffffff')
+                              : '#10b981'
+                    }}
+                  />
+                  <span>{t.message}</span>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+
           {/* Core Command Selector palette popup container */}
           <CommandPalette
             isOpen={isPaletteOpen}
@@ -1629,5 +1723,6 @@ function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
         </div>
       )}
     </div>
+    </MotionConfig>
   );
 }

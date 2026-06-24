@@ -20,6 +20,7 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
     { id: 'editor', label: 'Editor', icon: <Code size={18} /> },
     { id: 'scripts', label: 'Scripts', icon: <FileCode size={18} /> },
+    ...(settings.experimental?.multiAccountInjection ? [{ id: 'multiaccount', label: 'Multi-Account', icon: <Cpu size={18} /> }] : []),
     { id: 'settings', label: 'Settings', icon: <Sliders size={18} /> },
     { id: 'about', label: 'Workspace Info', icon: <Info size={18} /> },
   ];
@@ -109,7 +110,7 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
         <button
           onClick={() => setShowProfileModal(!showProfileModal)}
           style={{ borderColor: theme.borderColor }}
-          className="w-full p-3 border-t flex items-center space-x-2.5 overflow-hidden hover:bg-zinc-800/10 cursor-pointer text-left transition"
+          className="w-full p-3 border-t flex items-center space-x-4 overflow-hidden hover:bg-zinc-800/10 cursor-pointer text-left transition"
         >
           <div className="relative group shrink-0 mx-auto sm:mx-0">
             <img

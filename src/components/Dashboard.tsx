@@ -26,6 +26,24 @@ export default function Dashboard({
 }: DashboardProps) {
   
   const [statusColorText, setStatusColorText] = useState('green');
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+
+  const getCardColor = (cardIndex: number): string => {
+    const isSynced = settings.appearance?.cardColorMode === 'synced';
+    if (isSynced) {
+      return theme.accent;
+    }
+    // Default colorful colorways
+    const colors = [
+      '#10b981', // Emerald (Card 1)
+      '#0ea5e9', // Sky (Card 2)
+      '#8b5cf6', // Violet (Card 3)
+      '#d946ef', // Fuchsia (Card 4)
+      '#f59e0b', // Amber (Card 5)
+      '#f43f5e', // Rose (Card 6)
+    ];
+    return colors[cardIndex] || theme.accent;
+  };
 
   // Simulated Executor Core Telemetry States
   const [logs, setLogs] = useState<string[]>([
@@ -118,9 +136,13 @@ export default function Dashboard({
   return (
     <div 
       id="dashboard-viewport" 
-      className="flex-1 flex flex-col min-h-0 bg-zinc-950 overflow-y-auto relative select-none pb-12"
+      className="flex-1 flex flex-col min-h-0 overflow-y-auto relative select-none pb-12"
       style={{
-        backgroundImage: 'radial-gradient(rgba(255,255,255,0.012) 1px, transparent 1px)',
+        backgroundColor: theme.bodyBg,
+        color: theme.textMain,
+        backgroundImage: theme.isLight 
+          ? 'radial-gradient(rgba(0,0,0,0.015) 1px, transparent 1px)' 
+          : 'radial-gradient(rgba(255,255,255,0.012) 1px, transparent 1px)',
         backgroundSize: '16px 16px'
       }}
     >
@@ -145,53 +167,42 @@ export default function Dashboard({
         className="p-6 border-b shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4 z-10 relative backdrop-blur-sm"
         style={{ borderColor: theme.borderColor, backgroundColor: `${theme.headerBg}cc` }}
       >
-        <div className="text-left space-y-1">
-          <div className="flex items-center space-x-2.5">
-            <span 
-              style={{
-                color: theme.accent,
-                backgroundColor: `${theme.accent}15`,
-                borderColor: `${theme.accent}30`
-              }}
-              className="text-[11px] font-mono tracking-widest font-extrabold uppercase px-2.5 py-1 rounded border shadow-md"
-            >
-              Incognito 3
-            </span>
-          </div>
-          <motion.h1 
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="text-xl sm:text-2xl font-black tracking-tight text-white pt-1"
-          >
-            Welcome back, <span style={{ color: theme.accent }}>{settings.account.username}</span>
-          </motion.h1>
-          <p className="text-[11px] font-mono tracking-tight text-zinc-500">
-            System registers: SECURED. Execution pipeline active. Attached thread: #7204.
-          </p>
-        </div>
-
-        {/* Executor Server Status Badge */}
-        <div className="flex flex-wrap items-center gap-3 self-start sm:self-center">
-          <div 
-            className="flex items-center space-x-2 px-3 py-1.5 rounded-xl border text-[10px] font-bold font-mono tracking-wider select-none uppercase bg-zinc-900/60"
-            style={{ borderColor: theme.borderColor }}
-          >
-            <span className="text-zinc-500 font-bold">STATUS :</span>
-            <span 
-              className="w-1.5 h-1.5 rounded-full inline-block animate-ping shrink-0" 
-              style={{ 
-                backgroundColor: statusColorText === 'red' ? '#ef4444' : statusColorText === 'yellow' ? '#f59e0b' : '#10b981', 
-              }} 
-            />
-            <span 
-              className="font-black text-[9px]"
-              style={{ 
-                color: statusColorText === 'red' ? '#ef4444' : statusColorText === 'yellow' ? '#f59e0b' : '#10b981',
-              }}
-            >
-              {statusColorText.toUpperCase()}
-            </span>
+        <div className="flex flex-row items-center justify-between w-full">
+          <div className="relative flex items-center space-x-4">
+            <div className="flex items-baseline relative select-none">
+              <span className="text-3xl font-black tracking-tight font-sans uppercase" style={{ color: theme.textMain }}>
+                INCOGNITO
+              </span>
+              <span className="text-4xl font-black font-sans ml-1 select-none relative inline-flex items-center" style={{ color: theme.accent }}>
+                3
+                <img 
+                  src="https://raw.githubusercontent.com/incognito-updates/tracker/refs/heads/main/500x500%5BLOGO%5D.png" 
+                  alt="Incognito Logo"
+                  className="absolute -top-2.5 -right-5.5 w-7.5 h-7.5 object-contain rotate-[12deg] drop-shadow-[0_3px_8px_rgba(0,0,0,0.4)]"
+                  referrerPolicy="no-referrer"
+                />
+              </span>
+            </div>
+            
+            <div className="h-5 w-[1px] bg-zinc-800/40" />
+            
+            {/* Status 3 indicator */}
+            <div className="flex items-center space-x-2">
+              <span 
+                className="w-2 h-2 rounded-full animate-pulse" 
+                style={{ 
+                  backgroundColor: statusColorText === 'red' ? '#ef4444' : statusColorText === 'yellow' ? '#f59e0b' : '#10b981', 
+                }} 
+              />
+              <span 
+                className="text-xs font-mono font-bold uppercase tracking-widest"
+                style={{ 
+                  color: statusColorText === 'red' ? '#ef4444' : statusColorText === 'yellow' ? '#f59e0b' : '#10b981',
+                }}
+              >
+                {statusColorText === 'red' ? 'OFFLINE' : statusColorText === 'yellow' ? 'DEGRADED' : 'SECURED'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -209,31 +220,37 @@ export default function Dashboard({
             transition={{ duration: 0.2, delay: 0.02 }}
             onClick={triggerSimulation}
             style={{ 
-              borderColor: injectionStatus === 'SUCCESS' ? `${theme.accent}60` : theme.borderColor,
-              boxShadow: injectionStatus === 'SUCCESS' ? `0 0 15px ${theme.accent}15` : 'none'
+              borderColor: injectionStatus === 'SUCCESS' ? `${getCardColor(0)}80` : theme.borderColor,
+              backgroundColor: theme.cardBg,
+              boxShadow: injectionStatus === 'SUCCESS'
+                ? `0 0 15px ${getCardColor(0)}15` 
+                : 'none',
             }}
-            className="p-4.5 rounded-xl border text-left relative overflow-hidden bg-zinc-950/60 backdrop-blur-md hover:border-zinc-700/80 transition-all duration-300 group cursor-pointer"
+            className="p-4.5 rounded-xl border text-left relative overflow-hidden backdrop-blur-md transition-all duration-300 group cursor-pointer"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-zinc-500/5 rounded-full blur-2xl pointer-events-none" />
+            <div 
+              style={{ backgroundColor: `${getCardColor(0)}0a` }}
+              className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl pointer-events-none" 
+            />
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-zinc-500">
+              <span style={{ color: theme.textMuted }} className="text-[10px] font-mono font-bold tracking-widest uppercase">
                 Injection Status
               </span>
               <Zap 
                 size={13} 
-                className={`transition-colors ${injectionStatus === 'SUCCESS' ? 'text-emerald-400' : injectionStatus === 'INJECTING' ? 'text-amber-400 animate-spin' : 'text-zinc-500'}`}
-                style={{ color: injectionStatus === 'SUCCESS' ? undefined : injectionStatus === 'READY' ? theme.accent : undefined }}
+                className={`transition-colors ${injectionStatus === 'SUCCESS' ? 'text-emerald-400' : injectionStatus === 'INJECTING' ? 'text-amber-400 animate-spin' : ''}`}
+                style={{ color: injectionStatus === 'SUCCESS' ? undefined : injectionStatus === 'INJECTING' ? undefined : getCardColor(0) }}
               />
             </div>
             <div className="mt-4">
               <span 
                 className="text-xl font-extrabold font-mono tracking-tight drop-shadow-md"
-                style={{ color: injectionStatus === 'SUCCESS' ? '#34d399' : injectionStatus === 'INJECTING' ? '#fbbf24' : '#e4e4e7' }}
+                style={{ color: injectionStatus === 'SUCCESS' ? '#10b981' : injectionStatus === 'INJECTING' ? '#fbbf24' : theme.textMain }}
               >
                 {injectionStatus === 'SUCCESS' ? 'Injected' : injectionStatus === 'INJECTING' ? 'Injecting...' : 'Not Injected'}
               </span>
-              <span className="text-[10px] font-mono text-zinc-500 block mt-1.5 leading-relaxed">
-                {injectionStatus === 'SUCCESS' ? 'Bypass active and ready' : 'Number of running Luau threads'}
+              <span style={{ color: theme.textMuted }} className="text-[10px] font-mono block mt-1.5 leading-relaxed">
+                {injectionStatus === 'SUCCESS' ? 'Bypass active and ready' : 'Not hooked to game process'}
               </span>
             </div>
           </motion.div>
@@ -243,21 +260,28 @@ export default function Dashboard({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: 0.04 }}
-            style={{ borderColor: theme.borderColor }}
-            className="p-4.5 rounded-xl border text-left relative overflow-hidden bg-zinc-950/60 backdrop-blur-md hover:border-zinc-700/80 transition-all duration-300 group"
+            style={{ 
+              borderColor: theme.borderColor,
+              backgroundColor: theme.cardBg,
+              boxShadow: 'none',
+            }}
+            className="p-4.5 rounded-xl border text-left relative overflow-hidden backdrop-blur-md transition-all duration-300 group"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-zinc-500/5 rounded-full blur-2xl pointer-events-none" />
+            <div 
+              style={{ backgroundColor: `${getCardColor(1)}0a` }}
+              className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl pointer-events-none" 
+            />
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-zinc-500">
+              <span style={{ color: theme.textMuted }} className="text-[10px] font-mono font-bold tracking-widest uppercase">
                 UNC Compatibility
               </span>
-              <Activity size={13} style={{ color: theme.accent }} />
+              <Activity size={13} style={{ color: getCardColor(1) }} />
             </div>
             <div className="mt-4">
-              <span className="text-xl font-extrabold font-mono tracking-tight text-white drop-shadow-md">
-                Example: 98.7% Supported
+              <span style={{ color: theme.textMain }} className="text-xl font-extrabold font-mono tracking-tight drop-shadow-md">
+                98.7% Supported
               </span>
-              <span className="text-[10px] font-mono text-zinc-500 block mt-1.5 leading-relaxed">
+              <span style={{ color: theme.textMuted }} className="text-[10px] font-mono block mt-1.5 leading-relaxed">
                 Meets complete execution guidelines
               </span>
             </div>
@@ -268,21 +292,28 @@ export default function Dashboard({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: 0.06 }}
-            style={{ borderColor: theme.borderColor }}
-            className="p-4.5 rounded-xl border text-left relative overflow-hidden bg-zinc-950/60 backdrop-blur-md hover:border-zinc-700/80 transition-all duration-300 group"
+            style={{ 
+              borderColor: theme.borderColor,
+              backgroundColor: theme.cardBg,
+              boxShadow: 'none',
+            }}
+            className="p-4.5 rounded-xl border text-left relative overflow-hidden backdrop-blur-md transition-all duration-300 group"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-zinc-500/5 rounded-full blur-2xl pointer-events-none" />
+            <div 
+              style={{ backgroundColor: `${getCardColor(2)}0a` }}
+              className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl pointer-events-none" 
+            />
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-zinc-500">
+              <span style={{ color: theme.textMuted }} className="text-[10px] font-mono font-bold tracking-widest uppercase">
                 Active Threads
               </span>
-              <Cpu size={13} style={{ color: theme.accent }} />
+              <Cpu size={13} style={{ color: getCardColor(2) }} />
             </div>
             <div className="mt-4">
-              <span className="text-xl font-extrabold font-mono tracking-tight text-white drop-shadow-md">
+              <span style={{ color: theme.textMain }} className="text-xl font-extrabold font-mono tracking-tight drop-shadow-md">
                 {activeThreads} Threads
               </span>
-              <span className="text-[10px] font-mono text-zinc-500 block mt-1.5 leading-relaxed">
+              <span style={{ color: theme.textMuted }} className="text-[10px] font-mono block mt-1.5 leading-relaxed">
                 Number of running Luau threads
               </span>
             </div>
@@ -293,21 +324,28 @@ export default function Dashboard({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: 0.08 }}
-            style={{ borderColor: theme.borderColor }}
-            className="p-4.5 rounded-xl border text-left relative overflow-hidden bg-zinc-950/60 backdrop-blur-md hover:border-zinc-700/80 transition-all duration-300 group"
+            style={{ 
+              borderColor: theme.borderColor,
+              backgroundColor: theme.cardBg,
+              boxShadow: 'none',
+            }}
+            className="p-4.5 rounded-xl border text-left relative overflow-hidden backdrop-blur-md transition-all duration-300 group"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-zinc-500/5 rounded-full blur-2xl pointer-events-none" />
+            <div 
+              style={{ backgroundColor: `${getCardColor(3)}0a` }}
+              className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl pointer-events-none" 
+            />
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-zinc-500">
+              <span style={{ color: theme.textMuted }} className="text-[10px] font-mono font-bold tracking-widest uppercase">
                 Luau Heap Usage
               </span>
-              <Cpu size={13} style={{ color: theme.accent }} />
+              <Cpu size={13} style={{ color: getCardColor(3) }} />
             </div>
             <div className="mt-4">
-              <span className="text-xl font-extrabold font-mono tracking-tight text-white drop-shadow-md">
+              <span style={{ color: theme.textMain }} className="text-xl font-extrabold font-mono tracking-tight drop-shadow-md">
                 {simulatedMem} MB
               </span>
-              <span className="text-[10px] font-mono text-zinc-500 block mt-1.5 leading-relaxed">
+              <span style={{ color: theme.textMuted }} className="text-[10px] font-mono block mt-1.5 leading-relaxed">
                 Memory used by the executor's Luau VM
               </span>
             </div>
@@ -318,21 +356,28 @@ export default function Dashboard({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: 0.1 }}
-            style={{ borderColor: theme.borderColor }}
-            className="p-4.5 rounded-xl border text-left relative overflow-hidden bg-zinc-950/60 backdrop-blur-md hover:border-zinc-700/80 transition-all duration-300 group"
+            style={{ 
+              borderColor: theme.borderColor,
+              backgroundColor: theme.cardBg,
+              boxShadow: 'none',
+            }}
+            className="p-4.5 rounded-xl border text-left relative overflow-hidden backdrop-blur-md transition-all duration-300 group"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-zinc-500/5 rounded-full blur-2xl pointer-events-none" />
+            <div 
+              style={{ backgroundColor: `${getCardColor(4)}0a` }}
+              className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl pointer-events-none" 
+            />
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-zinc-500">
+              <span style={{ color: theme.textMuted }} className="text-[10px] font-mono font-bold tracking-widest uppercase">
                 Execution Success Rate
               </span>
-              <CheckCircle2 size={13} style={{ color: theme.accent }} />
+              <CheckCircle2 size={13} style={{ color: getCardColor(4) }} />
             </div>
             <div className="mt-4">
-              <span className="text-xl font-extrabold font-mono tracking-tight text-white drop-shadow-md">
+              <span style={{ color: theme.textMain }} className="text-xl font-extrabold font-mono tracking-tight drop-shadow-md">
                 99.4%
               </span>
-              <span className="text-[10px] font-mono text-zinc-500 block mt-1.5 leading-relaxed">
+              <span style={{ color: theme.textMuted }} className="text-[10px] font-mono block mt-1.5 leading-relaxed">
                 Percentage of scripts that executed successfully
               </span>
             </div>
@@ -343,21 +388,28 @@ export default function Dashboard({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: 0.12 }}
-            style={{ borderColor: theme.borderColor }}
-            className="p-4.5 rounded-xl border text-left relative overflow-hidden bg-zinc-950/60 backdrop-blur-md hover:border-zinc-700/80 transition-all duration-300 group"
+            style={{ 
+              borderColor: theme.borderColor,
+              backgroundColor: theme.cardBg,
+              boxShadow: 'none',
+            }}
+            className="p-4.5 rounded-xl border text-left relative overflow-hidden backdrop-blur-md transition-all duration-300 group"
           >
-            <div className="absolute top-0 right-0 w-24 h-24 bg-zinc-500/5 rounded-full blur-2xl pointer-events-none" />
+            <div 
+              style={{ backgroundColor: `${getCardColor(5)}0a` }}
+              className="absolute top-0 right-0 w-24 h-24 rounded-full blur-2xl pointer-events-none" 
+            />
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold tracking-widest uppercase text-zinc-500">
+              <span style={{ color: theme.textMuted }} className="text-[10px] font-mono font-bold tracking-widest uppercase">
                 CPU Usage
               </span>
-              <Activity size={13} style={{ color: theme.accent }} />
+              <Activity size={13} style={{ color: getCardColor(5) }} />
             </div>
             <div className="mt-4">
-              <span className="text-xl font-extrabold font-mono tracking-tight text-white drop-shadow-md">
+              <span style={{ color: theme.textMain }} className="text-xl font-extrabold font-mono tracking-tight drop-shadow-md">
                 {simulatedCpu}%
               </span>
-              <span className="text-[10px] font-mono text-zinc-500 block mt-1.5 leading-relaxed">
+              <span style={{ color: theme.textMuted }} className="text-[10px] font-mono block mt-1.5 leading-relaxed">
                 Current executor process CPU usage
               </span>
             </div>
@@ -366,12 +418,18 @@ export default function Dashboard({
         </div>
 
         {/* Console logs status panel */}
-        <div className="bg-zinc-950 border border-zinc-800/90 rounded-xl overflow-hidden shadow-2xl relative">
-          <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/10 to-transparent pointer-events-none" />
-          <div className="px-4 py-2.5 bg-zinc-900/85 border-b border-zinc-800/90 flex items-center justify-between">
+        <div 
+          className="border rounded-xl overflow-hidden shadow-2xl relative"
+          style={{ backgroundColor: theme.cardBg, borderColor: theme.borderColor }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-zinc-900/5 to-transparent pointer-events-none" />
+          <div 
+            className="px-4 py-2.5 border-b flex items-center justify-between"
+            style={{ backgroundColor: theme.headerBg, borderColor: theme.borderColor }}
+          >
             <div className="flex items-center space-x-2">
               <Terminal size={11} style={{ color: theme.accent }} />
-              <span className="text-[10px] font-mono font-bold tracking-wider text-zinc-400 uppercase">
+              <span style={{ color: theme.textMain }} className="text-[10px] font-mono font-bold tracking-wider uppercase">
                 Executor VM Status Log
               </span>
             </div>
@@ -382,21 +440,21 @@ export default function Dashboard({
             </div>
           </div>
           
-          <div className="p-4.5 font-mono text-[10px] leading-relaxed text-left space-y-1.5 max-h-36 overflow-y-auto select-text scrollbar-thin scrollbar-thumb-zinc-800">
+          <div className="p-4.5 font-mono text-[10px] leading-relaxed text-left space-y-1.5 max-h-36 overflow-y-auto select-text scrollbar-thin">
             {logs.map((log, lIdx) => (
-              <div key={lIdx} className="text-zinc-400 hover:text-zinc-200 transition duration-100">
-                <span className="text-zinc-650 font-bold">[{lIdx + 1}]</span> {log}
+              <div key={lIdx} style={{ color: theme.textMuted }} className="hover:opacity-80 transition duration-100">
+                <span style={{ color: theme.accent }} className="font-bold">[{lIdx + 1}]</span> {log}
               </div>
             ))}
             
             {injectionStatus === 'INJECTING' && (
-              <div className="text-amber-400 font-bold animate-pulse">
+              <div className="text-amber-500 font-bold animate-pulse">
                 &gt;&gt; [SYS] {injectionLog}
               </div>
             )}
             {injectionStatus === 'SUCCESS' && (
-              <div className="text-emerald-400 font-bold flex items-center space-x-1.5">
-                <CheckCircle2 size={10} className="text-emerald-400 shrink-0" />
+              <div className="text-emerald-500 font-bold flex items-center space-x-1.5">
+                <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
                 <span>&gt;&gt; [VM] Active Hook Connected: {injectionLog}</span>
               </div>
             )}
@@ -407,7 +465,7 @@ export default function Dashboard({
 
         {/* Quick Actions Panel */}
         <div className="space-y-4">
-          <h2 className="text-[10px] font-bold font-mono tracking-widest uppercase text-left flex items-center space-x-2 text-zinc-500">
+          <h2 style={{ color: theme.textMuted }} className="text-[10px] font-bold font-mono tracking-widest uppercase text-left flex items-center space-x-2">
             <Flame size={10} className="text-amber-500 animate-pulse shrink-0" />
             <span>Workspace Management Quick-Actions</span>
           </h2>
@@ -415,7 +473,8 @@ export default function Dashboard({
             
             <button
               onClick={handleCreateNewScript}
-              className="p-5 rounded-xl border border-zinc-800/80 text-left flex items-start space-x-4 bg-zinc-950/60 backdrop-blur-xs hover:border-zinc-700 hover:bg-zinc-900/10 transition-all duration-300 transform hover:scale-[1.01] hover:shadow-2xl cursor-pointer group"
+              style={{ backgroundColor: theme.cardBg, borderColor: theme.borderColor }}
+              className="p-5 rounded-xl border text-left flex items-start space-x-4 hover:opacity-95 hover:scale-[1.01] transition-all duration-300 shadow-sm cursor-pointer group"
             >
               <div 
                 style={{
@@ -428,14 +487,15 @@ export default function Dashboard({
                 <Plus size={16} />
               </div>
               <div className="text-left">
-                <span className="text-xs font-bold font-mono tracking-tight block text-zinc-200">Append New script</span>
-                <span className="text-[10px] text-zinc-500 block mt-1 leading-relaxed">Creates a fresh Luau code node inside space</span>
+                <span style={{ color: theme.textMain }} className="text-xs font-bold font-mono tracking-tight block">Append New script</span>
+                <span style={{ color: theme.textMuted }} className="text-[10px] block mt-1 leading-relaxed">Creates a fresh Luau code node inside space</span>
               </div>
             </button>
 
             <button
               onClick={() => setActiveSection('settings')}
-              className="p-5 rounded-xl border border-zinc-800/80 text-left flex items-start space-x-4 bg-zinc-950/60 backdrop-blur-xs hover:border-zinc-700 hover:bg-zinc-900/10 transition-all duration-300 transform hover:scale-[1.01] hover:shadow-2xl cursor-pointer group"
+              style={{ backgroundColor: theme.cardBg, borderColor: theme.borderColor }}
+              className="p-5 rounded-xl border text-left flex items-start space-x-4 hover:opacity-95 hover:scale-[1.01] transition-all duration-300 shadow-sm cursor-pointer group"
             >
               <div 
                 style={{
@@ -448,8 +508,8 @@ export default function Dashboard({
                 <Settings size={16} />
               </div>
               <div className="text-left">
-                <span className="text-xs font-bold font-mono tracking-tight block text-zinc-200">Luau configuration</span>
-                <span className="text-[10px] text-zinc-500 block mt-1 leading-relaxed">Define syntax engines, profiles and theme guides</span>
+                <span style={{ color: theme.textMain }} className="text-xs font-bold font-mono tracking-tight block">Luau configuration</span>
+                <span style={{ color: theme.textMuted }} className="text-[10px] block mt-1 leading-relaxed">Define syntax engines, profiles and theme guides</span>
               </div>
             </button>
           </div>
@@ -460,13 +520,16 @@ export default function Dashboard({
           
           {/* Recent Files List */}
           <div className="space-y-4">
-            <h2 className="text-[10px] font-bold font-mono tracking-widest uppercase text-left flex items-center space-x-2 text-zinc-500">
+            <h2 style={{ color: theme.textMuted }} className="text-[10px] font-bold font-mono tracking-widest uppercase text-left flex items-center space-x-2">
               <FileText size={10} style={{ color: theme.accent }} className="shrink-0" />
               <span>Recently Modified scripts</span>
             </h2>
             <div className="space-y-2.5">
               {recentFiles.length === 0 ? (
-                <div className="border border-dashed border-zinc-800 p-8 rounded-xl text-center text-xs font-mono text-zinc-650">
+                <div 
+                  style={{ borderColor: theme.borderColor, color: theme.textMuted }} 
+                  className="border border-dashed p-8 rounded-xl text-center text-xs font-mono"
+                >
                   No scripts cached in memory.
                 </div>
               ) : (
@@ -474,7 +537,8 @@ export default function Dashboard({
                   <div
                     key={file.id}
                     onClick={() => onOpenFileInEditor(file.id)}
-                    className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-950/40 hover:bg-zinc-900/20 hover:border-zinc-700 transition-all duration-200 cursor-pointer flex items-center justify-between group"
+                    style={{ backgroundColor: theme.cardBg, borderColor: theme.borderColor }}
+                    className="p-4 rounded-xl border hover:opacity-90 transition-all duration-200 cursor-pointer flex items-center justify-between group"
                   >
                     <div className="flex items-center space-x-3.5 min-w-0">
                       <div 
@@ -494,12 +558,12 @@ export default function Dashboard({
                         >
                           {file.name}
                         </span>
-                        <span className="text-[9px] font-mono text-zinc-600 block mt-0.5">
+                        <span style={{ color: theme.textMuted }} className="text-[9px] font-mono block mt-0.5">
                           Length: {file.size} characters
                         </span>
                       </div>
                     </div>
-                    <ArrowRight size={12} className="text-zinc-600 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight size={12} style={{ color: theme.textMuted }} className="group-hover:translate-x-1 transition-transform" />
                   </div>
                 ))
               )}
@@ -508,13 +572,16 @@ export default function Dashboard({
 
           {/* Favorite Files List */}
           <div className="space-y-4">
-            <h2 className="text-[10px] font-bold font-mono tracking-widest uppercase text-left flex items-center space-x-2 text-zinc-500">
+            <h2 style={{ color: theme.textMuted }} className="text-[10px] font-bold font-mono tracking-widest uppercase text-left flex items-center space-x-2">
               <Star size={10} className="text-amber-500 shrink-0" />
               <span>Pinned script hub</span>
             </h2>
             <div className="space-y-2.5">
               {favoriteFiles.length === 0 ? (
-                <div className="border border-dashed border-zinc-800 p-8 rounded-xl text-center text-xs font-mono text-zinc-650">
+                <div 
+                  style={{ borderColor: theme.borderColor, color: theme.textMuted }}
+                  className="border border-dashed p-8 rounded-xl text-center text-xs font-mono"
+                >
                   No pinned script slots reserved yet.
                 </div>
               ) : (
@@ -522,7 +589,8 @@ export default function Dashboard({
                   <div
                     key={file.id}
                     onClick={() => onOpenFileInEditor(file.id)}
-                    className="p-4 rounded-xl border border-zinc-800/80 bg-zinc-950/40 hover:bg-zinc-900/20 hover:border-zinc-700 transition-all duration-200 cursor-pointer flex items-center justify-between group"
+                    style={{ backgroundColor: theme.cardBg, borderColor: theme.borderColor }}
+                    className="p-4 rounded-xl border hover:opacity-90 transition-all duration-200 cursor-pointer flex items-center justify-between group"
                   >
                     <div className="flex items-center space-x-3.5 min-w-0">
                       <div className="p-2 rounded-lg bg-amber-500/5 text-amber-500 border border-amber-500/10 group-hover:bg-amber-500/10 transition-colors">
@@ -535,12 +603,12 @@ export default function Dashboard({
                         >
                           {file.name}
                         </span>
-                        <span className="text-[9px] font-mono text-zinc-600 block mt-0.5">
+                        <span style={{ color: theme.textMuted }} className="text-[9px] font-mono block mt-0.5">
                           Locked execution slot
                         </span>
                       </div>
                     </div>
-                    <ArrowRight size={12} className="text-zinc-600 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight size={12} style={{ color: theme.textMuted }} className="group-hover:translate-x-1 transition-transform" />
                   </div>
                 ))
               )}
