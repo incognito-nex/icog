@@ -685,18 +685,26 @@ export default function CodeEditor({
                 onContextMenu={(e) => handleRightClickTab(e, tb.fileId)}
                 onClick={() => setActiveFileId(tb.fileId)}
                 style={{
-                  borderBottomColor: isCurrent ? theme.accent : 'transparent',
-                  background: isCurrent ? theme.editorBg : 'transparent'
+                  background: isCurrent ? theme.editorBg : 'transparent',
                 }}
-                className={`group h-full flex items-center space-x-2 px-3.5 border-b-2 cursor-pointer transition-all duration-150 relative text-xs min-w-[95px] max-w-[170px] shrink-0 hover:bg-zinc-800/10 ${
+                className={`group h-full flex items-center space-x-2 px-4 cursor-pointer transition-all duration-200 relative text-xs min-w-[100px] max-w-[185px] shrink-0 rounded-t-xl ${
                   isCurrent 
-                    ? 'text-white font-bold' 
-                    : 'text-zinc-500 hover:text-zinc-300'
+                    ? 'text-white font-black' 
+                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/5'
                 }`}
               >
-                <FileCode size={13} style={{ color: isCurrent ? theme.accent : undefined }} className="shrink-0" />
+                <FileCode 
+                  size={13} 
+                  style={{ 
+                    color: isCurrent ? theme.accent : undefined,
+                    filter: isCurrent ? `drop-shadow(0 0 3px ${theme.accent}60)` : 'none'
+                  }} 
+                  className="shrink-0 transition-all duration-200" 
+                />
                 
-                <span className="truncate flex-1 font-mono text-[10px] pr-2">
+                <span className={`truncate flex-1 font-mono text-[10px] pr-2 transition-all duration-200 ${
+                  isCurrent ? 'tracking-wide' : ''
+                }`}>
                   {fileItem.name}
                 </span>
 
@@ -712,11 +720,24 @@ export default function CodeEditor({
                   ) : null}
                   <button
                     onClick={(e) => handleCloseTab(tb.fileId, e)}
-                    className={`rounded hover:bg-zinc-800 text-zinc-500 hover:text-rose-500 p-0.5 ${isUnsaved ? 'hidden group-hover:block' : ''}`}
+                    className="rounded-md hover:bg-zinc-800/40 text-zinc-500 hover:text-rose-500 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
                   >
                     <X size={10} />
                   </button>
                 </div>
+
+                {/* Inset Glowing Active Indicator at the bottom */}
+                {isCurrent && (
+                  <motion.div
+                    layoutId="activeTabIndicator"
+                    className="absolute bottom-0 left-3.5 right-3.5 h-[2.5px] rounded-t-full"
+                    style={{ 
+                      backgroundColor: theme.accent,
+                      boxShadow: `0 -1px 8px ${theme.accent}, 0 0 3px ${theme.accent}`
+                    }}
+                    transition={{ type: "spring", stiffness: 380, damping: 26 }}
+                  />
+                )}
               </motion.div>
             );
           })}

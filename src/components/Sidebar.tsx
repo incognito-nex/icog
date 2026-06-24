@@ -54,18 +54,42 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
       }}
       className="w-16 sm:w-60 h-full shrink-0 border-r flex flex-col justify-between font-sans transition-all duration-300 relative z-30 select-none"
     >
-      {/* Top Header - Brand Only in Crucial Place */}
+      {/* Top Header - Premium Minimalist Status (No big INCO-3 branding, no bulky bars) */}
       <div
         style={{ borderColor: theme.borderColor }}
-        className="h-14 flex items-center justify-center sm:justify-start px-4 border-b overflow-hidden"
+        className="pt-6 pb-4 px-4 border-b overflow-hidden select-none"
       >
-        <div className="w-full flex items-center justify-center">
-          {/* Brand Word - centered, thicker and bigger, no blinking dot */}
-          <span 
-            className="text-[15px] font-black font-mono tracking-widest"
-            style={{ color: theme.accent }}
-          >
-            INCO-3
+        {/* Desktop View: Full sleek dashboard status panel */}
+        <div className="hidden sm:flex flex-col space-y-2">
+          <div className="flex items-center space-x-2">
+            {/* Pulsing state LEDs */}
+            <div className="flex space-x-1.5 items-center">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: theme.accent }}></span>
+                <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: theme.accent }}></span>
+              </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/40"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500/40"></span>
+            </div>
+            <span className="text-[8px] font-mono font-extrabold tracking-widest text-zinc-500 uppercase">
+              SYS WORKSPACE
+            </span>
+          </div>
+          <div className="pt-2 flex flex-col space-y-0.5">
+            <span className="text-[10px] font-mono font-black text-zinc-300 tracking-wider">
+              ONLINE & RUNNING
+            </span>
+            <span className="text-[7.5px] font-mono text-zinc-500 tracking-tight uppercase">
+              Latency: 14ms // Secure Tunnel
+            </span>
+          </div>
+        </div>
+
+        {/* Mobile View: Single centered sleek pulsing LED dot */}
+        <div className="flex sm:hidden justify-center items-center py-2">
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: theme.accent }}></span>
+            <span className="relative inline-flex rounded-full h-3 w-3" style={{ backgroundColor: theme.accent }}></span>
           </span>
         </div>
       </div>
@@ -84,33 +108,39 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
               className={`w-full flex items-center justify-center sm:justify-start space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-medium font-sans border transition-all relative cursor-pointer outline-none ${
                 isActive
-                  ? 'shadow-lg shadow-black/15'
+                  ? 'border-transparent bg-transparent'
                   : 'border-transparent hover:bg-zinc-800/10'
               }`}
               style={{
-                borderColor: isActive ? `${theme.accent}30` : 'transparent',
-                borderLeft: isActive ? `3px solid ${theme.accent}` : '1px solid transparent',
                 color: isActive ? theme.textMain : theme.textMuted,
-                backgroundColor: isActive ? `${theme.accent}12` : 'transparent',
-                boxShadow: isActive ? `0 0 15px ${theme.accent}0a` : 'none',
+                boxShadow: 'none',
               }}
             >
               <div
                 style={{
                   color: isActive ? theme.accent : theme.textMuted,
+                  filter: isActive ? `drop-shadow(0 0 5px ${theme.accent}50)` : 'none',
                 }}
-                className={`transition-colors shrink-0`}
+                className="transition-all duration-200 shrink-0"
               >
                 {item.icon}
               </div>
-              <span className="hidden sm:inline font-mono tracking-wider text-[10.5px] font-semibold truncate uppercase">
+              <span className={`hidden sm:inline font-mono tracking-wider text-[10.5px] truncate uppercase transition-all duration-200 ${
+                isActive ? 'font-black' : 'font-semibold'
+              }`}
+              style={{
+                color: isActive ? theme.textMain : theme.textMuted,
+              }}>
                 {item.label}
               </span>
               {isActive && (
                 <motion.div
                   layoutId="activeIndicator"
-                  className="absolute right-2 w-1 h-1.5 rounded-full"
-                  style={{ backgroundColor: theme.accent }}
+                  className="absolute right-2 w-[3.5px] h-5 rounded-full"
+                  style={{ 
+                    backgroundColor: theme.accent,
+                    boxShadow: `0 0 8px ${theme.accent}, 0 0 3px ${theme.accent}`
+                  }}
                   transition={{ type: "spring", stiffness: 350, damping: 25 }}
                 />
               )}
