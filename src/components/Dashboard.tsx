@@ -173,12 +173,13 @@ export default function Dashboard({
               <span className="text-3xl font-black tracking-tight font-sans uppercase" style={{ color: theme.textMain }}>
                 INCOGNITO
               </span>
-              <span className="text-4xl font-black font-sans ml-1 select-none relative inline-flex items-center" style={{ color: theme.accent }}>
+              <span className="text-4xl font-black font-sans ml-1 select-none relative inline-flex items-center no-underline border-none outline-none" style={{ color: theme.accent }}>
                 3
                 <img 
                   src="https://raw.githubusercontent.com/incognito-updates/tracker/refs/heads/main/500x500%5BLOGO%5D.png" 
                   alt="Incognito Logo"
-                  className="absolute -top-2.5 -right-5.5 w-7.5 h-7.5 object-contain rotate-[12deg] drop-shadow-[0_3px_8px_rgba(0,0,0,0.4)]"
+                  style={{ transform: 'scaleX(-1) rotate(12deg)' }}
+                  className="absolute -top-4 -right-4 w-7 h-7 object-contain select-none pointer-events-none border-0 border-none outline-none shadow-none no-underline"
                   referrerPolicy="no-referrer"
                 />
               </span>
@@ -200,7 +201,7 @@ export default function Dashboard({
                   color: statusColorText === 'red' ? '#ef4444' : statusColorText === 'yellow' ? '#f59e0b' : '#10b981',
                 }}
               >
-                {statusColorText === 'red' ? 'OFFLINE' : statusColorText === 'yellow' ? 'DEGRADED' : 'SECURED'}
+                {statusColorText === 'red' ? 'DOWN' : statusColorText === 'yellow' ? 'CURRENTLY IN MAINTENANCE' : 'UP'}
               </span>
             </div>
           </div>

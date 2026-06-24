@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { Home, Code, FileCode, Sliders, Palette, Info, Settings, ShieldAlert, Cpu } from 'lucide-react';
 import { AppTheme, UserSettings } from '../types';
 
@@ -70,23 +71,28 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
       </div>
 
       {/* Nav Menu Items */}
-      <div className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+      <div className="flex-1 py-4 px-2 space-y-1.5 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = activeSection === item.id;
           return (
-            <button
+            <motion.button
               id={`sidebar-btn-${item.id}`}
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              className={`w-full flex items-center justify-center sm:justify-start space-x-3 px-3 py-2.5 rounded-lg text-xs font-medium font-sans border transition-all ${
+              whileHover={{ scale: 1.02, x: 2 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className={`w-full flex items-center justify-center sm:justify-start space-x-3 px-3.5 py-2.5 rounded-xl text-xs font-medium font-sans border transition-all relative cursor-pointer outline-none ${
                 isActive
-                  ? 'border-l-2 shadow-xs'
-                  : 'border-transparent hover:bg-zinc-800/20'
+                  ? 'shadow-lg shadow-black/15'
+                  : 'border-transparent hover:bg-zinc-800/10'
               }`}
               style={{
-                borderLeftColor: isActive ? theme.accent : 'transparent',
+                borderColor: isActive ? `${theme.accent}30` : 'transparent',
+                borderLeft: isActive ? `3px solid ${theme.accent}` : '1px solid transparent',
                 color: isActive ? theme.textMain : theme.textMuted,
-                backgroundColor: isActive ? `${theme.accent}14` : 'transparent',
+                backgroundColor: isActive ? `${theme.accent}12` : 'transparent',
+                boxShadow: isActive ? `0 0 15px ${theme.accent}0a` : 'none',
               }}
             >
               <div
@@ -97,10 +103,18 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
               >
                 {item.icon}
               </div>
-              <span className="hidden sm:inline font-mono tracking-wide text-[11px] truncate uppercase">
+              <span className="hidden sm:inline font-mono tracking-wider text-[10.5px] font-semibold truncate uppercase">
                 {item.label}
               </span>
-            </button>
+              {isActive && (
+                <motion.div
+                  layoutId="activeIndicator"
+                  className="absolute right-2 w-1 h-1.5 rounded-full"
+                  style={{ backgroundColor: theme.accent }}
+                  transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                />
+              )}
+            </motion.button>
           );
         })}
       </div>
@@ -110,7 +124,7 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
         <button
           onClick={() => setShowProfileModal(!showProfileModal)}
           style={{ borderColor: theme.borderColor }}
-          className="w-full p-3 border-t flex items-center space-x-4 overflow-hidden hover:bg-zinc-800/10 cursor-pointer text-left transition"
+          className="w-full p-4 border-t flex items-center space-x-5 overflow-hidden hover:bg-zinc-800/10 cursor-pointer text-left transition-all duration-200"
         >
           <div className="relative group shrink-0 mx-auto sm:mx-0">
             <img
@@ -124,13 +138,13 @@ export default function Sidebar({ activeSection, setActiveSection, theme, settin
             />
           </div>
 
-          <div className="hidden sm:flex flex-col text-left truncate flex-1">
+          <div className="hidden sm:flex flex-col text-left truncate flex-1 pl-1.5">
             <span className="text-[11px] font-bold font-mono text-zinc-200 tracking-tight">
               {settings.account.username}
             </span>
             <span
               style={{ color: theme.accent }}
-              className="text-[8px] font-mono font-bold tracking-widest uppercase flex items-center space-x-0.5"
+              className="text-[8px] font-mono font-bold tracking-widest uppercase flex items-center space-x-0.5 mt-1"
             >
               <span>{settings.account.badge || 'Developer'}</span>
             </span>

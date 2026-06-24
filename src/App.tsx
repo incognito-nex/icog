@@ -1355,7 +1355,7 @@ function matchesKeybind(e: KeyboardEvent, keybindStr: string): boolean {
       </AnimatePresence>
 
       {!showLoading && (
-        <div className="flex-1 flex flex-col min-h-0 relative h-screen">
+        <div className="flex-1 flex flex-col min-h-0 relative h-full">
           
           {/* Main workspace layout frame wrapper */}
           <div className="flex-1 flex min-h-0 min-w-0">

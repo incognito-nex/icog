@@ -388,11 +388,11 @@ export default function EditorView({
           {/* Explorer Resizer Handle */}
           <div
             onMouseDown={handleExplorerDragStart}
-            className={`absolute top-0 right-0 w-1 h-full cursor-col-resize transition-all z-20 ${
-              isDraggingExplorer 
-                ? 'bg-red-500 shadow-[0_0_12px_#ef4444]' 
-                : 'bg-transparent hover:bg-red-500/50'
-            }`}
+            style={{
+              backgroundColor: isDraggingExplorer ? theme.accent : undefined,
+              boxShadow: isDraggingExplorer ? `0 0 12px ${theme.accent}` : undefined,
+            }}
+            className={`absolute top-0 right-0 w-1 h-full cursor-col-resize transition-all z-20 hover:bg-zinc-700/20`}
           />
         </div>
 

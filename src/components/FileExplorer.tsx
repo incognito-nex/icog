@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   FolderPlus, FilePlus, ChevronRight, ChevronDown, Folder, FolderOpen, FileCode, Play,
   MoreVertical, Edit, Trash2, Copy, CornerDownRight, Star, Heart, FileText, 
@@ -324,8 +325,14 @@ export default function FileExplorer({
       const isActive = activeFileId === node.id;
 
       return (
-        <div key={node.id} className="select-none font-mono">
-          <div
+        <motion.div 
+          key={node.id} 
+          layout="position"
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="select-none font-mono"
+        >
+          <motion.div
             onClick={() => {
               if (isFolder) {
                 setExpandedFolders(prev => ({ ...prev, [node.id]: !prev[node.id] }));
@@ -334,14 +341,15 @@ export default function FileExplorer({
               }
             }}
             onContextMenu={(e) => handleContextMenu(e, node.id, node.type)}
+            whileHover={{ x: 2, backgroundColor: isActive ? `${theme.accent}1c` : 'rgba(255,255,255,0.03)' }}
             style={{
               paddingLeft: `${Math.max(8, depth * 12)}px`,
               borderColor: isActive ? theme.accent : 'transparent',
               background: isActive ? `${theme.accent}12` : 'transparent',
               color: isActive ? theme.textMain : theme.textMuted,
             }}
-            className={`group py-1 px-2 flex items-center justify-between text-xs cursor-pointer hover:bg-zinc-800/10 rounded-md transition duration-150 relative ${
-              isActive ? 'border-l-2' : ''
+            className={`group py-1 px-2 flex items-center justify-between text-xs cursor-pointer rounded-lg transition-all duration-150 relative ${
+              isActive ? 'border-l-2 font-bold' : ''
             }`}
           >
             <div className="flex items-center space-x-2 truncate">
@@ -367,7 +375,7 @@ export default function FileExplorer({
             </div>
 
             {/* Quick hover nodes */}
-            <div className="hidden group-hover:flex items-center space-x-1 shrink-0 bg-[#0d0e12]/95 backdrop-blur-xs pl-2">
+            <div className="hidden group-hover:flex items-center space-x-1 shrink-0 bg-transparent pl-2">
               {isFolder ? (
                 <>
                   <button
@@ -406,19 +414,27 @@ export default function FileExplorer({
                 <MoreVertical size={12} />
               </button>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Children nodes connector indicators */}
-          {isFolder && isExpanded && (
-            <div className="relative">
-              <div
-                style={{ left: `${Math.max(14, depth * 12 + 6)}px`, borderColor: theme.borderColor }}
-                className="absolute top-0 bottom-2.5 border-l opacity-20 pointer-events-none"
-              />
-              {renderTree(node.id, depth + 1)}
-            </div>
-          )}
-        </div>
+          {/* Children nodes connector indicators with slide down animation */}
+          <AnimatePresence initial={false}>
+            {isFolder && isExpanded && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="relative overflow-hidden"
+              >
+                <div
+                  style={{ left: `${Math.max(14, depth * 12 + 6)}px`, borderColor: theme.borderColor }}
+                  className="absolute top-0 bottom-2.5 border-l opacity-20 pointer-events-none"
+                />
+                {renderTree(node.id, depth + 1)}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       );
     });
   };
@@ -437,10 +453,10 @@ export default function FileExplorer({
       <div
         onMouseDown={handleResizeMouseDown}
         style={{
-          backgroundColor: isDragging ? '#ef4444' : undefined,
-          boxShadow: isDragging ? '0 0 10px #ef4444' : undefined,
+          backgroundColor: isDragging ? theme.accent : undefined,
+          boxShadow: isDragging ? `0 0 12px ${theme.accent}` : undefined,
         }}
-        className={`absolute top-0 right-0 w-[5px] h-full cursor-col-resize hover:bg-[#ef4444]/60 active:bg-[#ef4444] transition-all duration-150 z-50 select-none`}
+        className={`absolute top-0 right-0 w-[5px] h-full cursor-col-resize transition-all duration-150 z-50 select-none opacity-40 hover:opacity-100 hover:bg-zinc-500/20`}
         title="Drag left/right to resize sidebar"
       />
       {/* Search & Actions Bar */}

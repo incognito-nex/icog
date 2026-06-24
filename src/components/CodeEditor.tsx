@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'motion/react';
 import Editor, { Monaco, useMonaco, loader } from '@monaco-editor/react';
 import { 
   X, Pin, Save, Star, Terminal, Play, RotateCcw, AlertTriangle, CheckCircle,
@@ -671,8 +672,12 @@ export default function CodeEditor({
             const isUnsaved = !!tb.isUnsaved;
 
             return (
-              <div
+              <motion.div
                 key={tb.fileId}
+                layout
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
                 draggable
                 onDragStart={(e) => handleDragStart(e, tb.fileId)}
                 onDragOver={handleDragOver}
@@ -683,9 +688,9 @@ export default function CodeEditor({
                   borderBottomColor: isCurrent ? theme.accent : 'transparent',
                   background: isCurrent ? theme.editorBg : 'transparent'
                 }}
-                className={`group h-full flex items-center space-x-2 px-3.5 border-b-2 cursor-pointer transition relative text-xs min-w-[90px] max-w-[170px] shrink-0 hover:bg-zinc-800/10 ${
+                className={`group h-full flex items-center space-x-2 px-3.5 border-b-2 cursor-pointer transition-all duration-150 relative text-xs min-w-[95px] max-w-[170px] shrink-0 hover:bg-zinc-800/10 ${
                   isCurrent 
-                    ? 'text-white font-semibold' 
+                    ? 'text-white font-bold' 
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
@@ -712,7 +717,7 @@ export default function CodeEditor({
                     <X size={10} />
                   </button>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
@@ -739,36 +744,42 @@ export default function CodeEditor({
           )}
 
           {activeFileId && (
-            <div className="flex items-center space-x-1.5">
-              <button
+            <div className="flex items-center space-x-2">
+              <motion.button
                 onClick={() => onInjectScript?.(activeFileId)}
-                style={{ backgroundColor: `rgba(16, 185, 129, 0.08)`, color: '#10b981', borderColor: `rgba(16, 185, 129, 0.2)` }}
-                className="p-1.5 px-3 border rounded text-[10px] font-mono font-bold flex items-center space-x-1 hover:opacity-90 active:scale-95 transition"
+                whileHover={{ scale: 1.03, boxShadow: '0 0 12px rgba(16, 185, 129, 0.25)', backgroundColor: 'rgba(16, 185, 129, 0.12)' }}
+                whileTap={{ scale: 0.97 }}
+                style={{ backgroundColor: `rgba(16, 185, 129, 0.06)`, color: '#10b981', borderColor: `rgba(16, 185, 129, 0.25)` }}
+                className="p-1.5 px-3 border.5 rounded-xl text-[10px] font-mono font-black tracking-wider flex items-center space-x-1.5 cursor-pointer outline-none transition-all duration-200"
                 title="Inject current script node"
               >
-                <Syringe size={11} style={{ color: '#10b981' }} />
-                <span>Inject</span>
-              </button>
+                <Syringe size={11} style={{ color: '#10b981' }} className="shrink-0" />
+                <span>INJECT</span>
+              </motion.button>
 
-              <button
+              <motion.button
                 onClick={() => onRunScript(activeFileId)}
-                style={{ backgroundColor: `${theme.accent}14`, color: theme.accent, borderColor: `${theme.accent}33` }}
-                className="p-1.5 px-3 border rounded text-[10px] font-mono font-bold flex items-center space-x-1 hover:opacity-90 active:scale-95 transition"
+                whileHover={{ scale: 1.03, boxShadow: `0 0 12px ${theme.accent}30`, backgroundColor: `${theme.accent}20` }}
+                whileTap={{ scale: 0.97 }}
+                style={{ backgroundColor: `${theme.accent}10`, color: theme.accent, borderColor: `${theme.accent}33` }}
+                className="p-1.5 px-3 border.5 rounded-xl text-[10px] font-mono font-black tracking-wider flex items-center space-x-1.5 cursor-pointer outline-none transition-all duration-200"
                 title="Execute current script node"
               >
-                <Play size={10} className="fill-current" />
-                <span>Execute</span>
-              </button>
+                <Play size={10} className="fill-current shrink-0" />
+                <span>EXECUTE</span>
+              </motion.button>
 
-              <button
+              <motion.button
                 onClick={handleClearEditorText}
-                style={{ backgroundColor: `rgba(239, 68, 68, 0.08)`, color: '#ef4444', borderColor: `rgba(239, 68, 68, 0.2)` }}
-                className="p-1.5 px-3 border rounded text-[10px] font-mono font-bold flex items-center space-x-1 hover:opacity-90 active:scale-95 transition"
+                whileHover={{ scale: 1.03, boxShadow: '0 0 12px rgba(239, 68, 68, 0.25)', backgroundColor: 'rgba(239, 68, 68, 0.12)' }}
+                whileTap={{ scale: 0.97 }}
+                style={{ backgroundColor: `rgba(239, 68, 68, 0.06)`, color: '#ef4444', borderColor: `rgba(239, 68, 68, 0.25)` }}
+                className="p-1.5 px-3 border.5 rounded-xl text-[10px] font-mono font-black tracking-wider flex items-center space-x-1.5 cursor-pointer outline-none transition-all duration-200"
                 title="Clear current editor code content"
               >
-                <Trash2 size={11} style={{ color: '#ef4444' }} />
-                <span>Clear</span>
-              </button>
+                <Trash2 size={11} style={{ color: '#ef4444' }} className="shrink-0" />
+                <span>CLEAR</span>
+              </motion.button>
             </div>
           )}
         </div>
@@ -793,7 +804,9 @@ export default function CodeEditor({
                   minimap: { enabled: settings.editor.minimap },
                   automaticLayout: true,
                   padding: { top: 8, bottom: 8 },
-                  cursorBlinking: 'smooth',
+                  cursorBlinking: settings.editor.cursorBlinking || 'smooth',
+                  cursorSmoothCaretAnimation: settings.editor.cursorBlinking === 'smooth' ? 'on' : 'off',
+                  cursorStyle: settings.editor.cursorStyle || 'line',
                   cursorWidth: 2,
                   folding: true,
                   autoIndent: 'full',
